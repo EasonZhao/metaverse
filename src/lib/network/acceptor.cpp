@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -89,7 +89,9 @@ code acceptor::safe_listen(uint16_t port)
         return error::operation_failed;
 
     boost_code error;
-    asio::endpoint endpoint(asio::tcp::v6(), settings_.inbound_port);
+    asio::endpoint endpoint(
+        settings_.use_ipv6 ? asio::tcp::v6() : asio::tcp::v4(),
+        settings_.inbound_port);
 
     acceptor_->open(endpoint.protocol(), error);
 
@@ -134,14 +136,14 @@ void acceptor::accept(accept_handler handler)
 void acceptor::safe_accept(socket::ptr socket, accept_handler handler)
 {
     // Critical Section (external)
-    /////////////////////////////////////////////////////////////////////////// 
+    ///////////////////////////////////////////////////////////////////////////
     const auto locked = socket->get_socket();
 
     // async_accept will not invoke the handler within this function.
     acceptor_->async_accept(locked->get(),
         std::bind(&acceptor::handle_accept,
             shared_from_this(), _1, socket, handler));
-    /////////////////////////////////////////////////////////////////////////// 
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void acceptor::handle_accept(const boost_code& ec, socket::ptr socket,

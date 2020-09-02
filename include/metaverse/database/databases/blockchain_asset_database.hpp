@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -60,12 +60,20 @@ public:
     /// Call to unload the memory map.
     bool close();
 
-	std::shared_ptr<blockchain_asset> get(const hash_digest& hash) const;
-	
-	/// 
-	std::shared_ptr<std::vector<blockchain_asset>> get_blockchain_assets() const;
-	
-	void store(const hash_digest& hash, const blockchain_asset& sp_detail);
+    std::shared_ptr<chain::blockchain_asset> get(const hash_digest& hash) const;
+
+    ///
+    std::shared_ptr<std::vector<chain::blockchain_asset>> get_blockchain_assets(const std::string& asset_symbol="") const;
+
+    uint64_t get_asset_volume(const std::string& name) const;
+
+    ///
+    std::shared_ptr<chain::blockchain_asset> get_register_history(const std::string & asset_symbol) const;
+    ///
+    uint64_t get_register_height(const std::string & asset_symbol) const;
+    std::shared_ptr<chain::blockchain_asset::list> get_asset_history(const std::string & asset_symbol) const;
+
+    void store(const hash_digest& hash, const chain::blockchain_asset& sp_detail);
 
     /// Delete a transaction from database.
     void remove(const hash_digest& hash);

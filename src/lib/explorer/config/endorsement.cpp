@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -40,7 +40,7 @@ static bool decode_endorsement(bc::endorsement& endorsement,
     const std::string& encoded)
 {
     bc::endorsement decoded;
-    if (!decode_base16(decoded, encoded) || 
+    if (!decode_base16(decoded, encoded) ||
         (decoded.size() > max_endorsement_size))
         return false;
 

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -32,7 +32,7 @@
 
 namespace libbitcoin {
 namespace node {
-    
+
 /// Class to manage initial header download connection, thread safe.
 class BCN_API session_header_sync
   : public network::session_batch, track<session_header_sync>
@@ -44,7 +44,7 @@ public:
         blockchain::simple_chain& blockchain,
         const config::checkpoint::list& checkpoints);
 
-    virtual void start(result_handler handler);
+    virtual void start(result_handler handler) override;
 
 protected:
     /// Overridden to attach and start specialized handshake.

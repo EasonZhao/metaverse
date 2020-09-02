@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -174,9 +174,14 @@ public:
 
     /// Get a randomly-selected address.
     virtual void fetch_address(const config::authority::list& excluded_list, address_handler handler);
+    virtual void fetch_seed_address(const config::authority::list& excluded_list, address_handler handler);
 
     ///Get authority of all connections
     config::authority::list authority_list();
+
+    /// Store an address.
+    void store_seed(const address& address, result_handler handler);
+    void remove_seed(const address& address, result_handler handler);
 
     /// Store an address.
     virtual void store(const address& address, result_handler handler);
@@ -191,9 +196,22 @@ public:
     virtual void address_count(count_handler handler);
 
     address::list address_list();
+    address::list seed_address_list();
 
     /// Get connection pool.
     virtual connections::ptr connections_ptr();
+
+    //upnp functions
+    virtual void map_port(bool use_upnp);
+#ifdef USE_UPNP
+    static void thread_map_port(uint16_t map_port);
+    config::authority::ptr get_out_address();
+#endif
+
+    //restart the seeding session
+    void restart_seeding(bool manual=false);
+
+    virtual bool is_use_testnet_rules() const {return false;}
 
 protected:
 
@@ -232,8 +250,8 @@ private:
     connections::ptr connections_;
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
+    session_seed::ptr seed;
 };
-
 } // namespace network
 } // namespace libbitcoin
 

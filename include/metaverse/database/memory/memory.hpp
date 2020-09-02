@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -39,6 +39,8 @@ class BCD_API memory
 public:
     typedef std::shared_ptr<memory> ptr;
 
+    virtual ~memory() {}
+
     /// Get the address indicated by the pointer.
     virtual uint8_t* buffer() = 0;
 
@@ -50,9 +52,9 @@ public:
 
 #ifdef REMAP_SAFETY
     typedef memory::ptr memory_ptr;
-    #define REMAP_ADDRESS(ptr) ptr->buffer()
-    #define REMAP_DOWNGRADE(ptr, data) ptr->downgrade(data)
-    #define REMAP_INCREMENT(ptr, offset) ptr->increment(offset)
+    #define REMAP_ADDRESS(ptr) (ptr)->buffer()
+    #define REMAP_DOWNGRADE(ptr, data) (ptr)->downgrade(data)
+    #define REMAP_INCREMENT(ptr, offset) (ptr)->increment(offset)
     #define REMAP_ACCESSOR(ptr, mutex) std::make_shared<accessor>(mutex, ptr)
     #define REMAP_ALLOCATOR(mutex) std::make_shared<allocator>(mutex)
     #define REMAP_READ(mutex) shared_lock lock(mutex)

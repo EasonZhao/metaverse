@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -39,7 +39,7 @@
 
 namespace libbitcoin {
 namespace wallet {
-    
+
 const uint64_t hd_private::mainnet = to_prefixes(76066276,
     hd_public::mainnet);
 
@@ -228,7 +228,7 @@ hd_key hd_private::to_hd_key() const
 
 hd_public hd_private::to_public() const
 {
-    return hd_public(((hd_public)*this).to_hd_key(), 
+    return hd_public(((hd_public)*this).to_hd_key(),
         hd_public::to_prefix(lineage_.prefixes));
 }
 

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -28,8 +28,6 @@
 #include <metaverse/database/memory/memory_map.hpp>
 #include <metaverse/database/primitives/record_multimap.hpp>
 #include <metaverse/bitcoin/chain/attachment/account/account_address.hpp>
-//#include <metaverse/database/result/account_address_result.hpp>  // todo -- remove later
-using namespace libbitcoin::chain;
 
 namespace libbitcoin {
 namespace database {
@@ -72,17 +70,19 @@ public:
     /// Call to unload the memory map.
     bool close();
 
-	/// store account address into database
-	void store(const short_hash& key, const account_address& account_address);
-	
-	/// get account address vector by key
-	account_address::list get(const short_hash& key) const;
-	
-	/// get account address according by key and address
-	std::shared_ptr<account_address> get(const short_hash& key, const std::string& address) const;
-	
+    /// store account address into database
+    void store(const short_hash& key, const chain::account_address& account_address);
+
+    /// get account address vector by key
+    chain::account_address::list get(const short_hash& key) const;
+
+    /// get account address according by key and address
+    std::shared_ptr<chain::account_address> get(const short_hash& key, const std::string& address) const;
+
     /// Delete the last row that was added to key.
     void delete_last_row(const short_hash& key);
+
+    void safe_store(const short_hash& key, const chain::account_address& address);
 
     /// Synchonise with disk.
     void sync();

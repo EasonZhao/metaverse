@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -26,8 +26,8 @@
 #include <vector>
 #include <metaverse/node.hpp>
 #include <metaverse/server/define.hpp>
-#include <metaverse/server/parser.hpp>
 #include <metaverse/server/settings.hpp>
+#include <metaverse/bitcoin/utility/path.hpp>
 
 BC_DECLARE_CONFIG_DEFAULT_PATH(".metaverse" / "mvs.conf")
 
@@ -60,7 +60,7 @@ options_metadata parser::load_options()
     (
         BS_CONFIG_VARIABLE ",c",
         value<path>(&configured.file)->
-		default_value("mvs.conf"),
+        default_value("mvs.conf"),
         "Specify path to a configuration settings file based on path ~/.metaverse"
     )
     (
@@ -87,19 +87,37 @@ options_metadata parser::load_options()
             default_value(false)->zero_tokens(),
         "Display version information."
     )
-	(
-		BS_DAEMON_VARIABLE ",d",
-		value<bool>(&configured.daemon)->
-			default_value(false)->zero_tokens(),
-		"Run in daemon mode (unix/apple)."
-	)
-	(
-		"testnet,t",
-		value<bool>(&configured.use_testnet_rules)->
-			default_value(false)->zero_tokens(),
-		"Use testnet rules for determination of work required, defaults to false."
-	)
-	;
+    (
+        BS_DAEMON_VARIABLE ",d",
+        value<bool>(&configured.daemon)->
+            default_value(false)->zero_tokens(),
+        "Run in daemon mode (unix/apple)."
+    )
+    (
+        "testnet,t",
+        value<bool>(&configured.use_testnet_rules)->
+            default_value(false)->zero_tokens(),
+        "Use testnet rules for determination of work required, defaults to false."
+    )
+    (
+        BS_DATADIR_VARIABLE ",D",
+        value<path>(&configured.data_dir)->
+            default_value(default_data_path()),
+        "Specify mvsd workspace path."
+    )
+    (
+        BS_UI_VARIABLE ",u",
+        value<bool>(&configured.ui)->
+        default_value(false),
+        "Open wallet UI."
+    )
+    (
+        "upnp,U",
+        value<bool>(&configured.upnp_map_port)->
+        default_value(true)->zero_tokens(),
+        "Add a upnp map port in your router which has a extern address to allow connections to your local address."
+    )
+    ;
 
     return description;
 }
@@ -147,6 +165,11 @@ options_metadata parser::load_settings()
         "network.identifier",
         value<uint32_t>(&configured.network.identifier),
         "The magic number for message headers, defaults to 0x6d73766d."
+    )
+    (
+        "network.use_ipv6",
+        value<bool>(&configured.network.use_ipv6),
+        "Use IPV6, defaults to true."
     )
     (
         "network.inbound_port",
@@ -214,6 +237,11 @@ options_metadata parser::load_settings()
         "Request that peers relay transactions, defaults to true."
     )
     (
+        "network.enable_re_seeding",
+        value<bool>(&configured.network.enable_re_seeding),
+        "Re-connect the seed nodes to refresh local hosts cache, when the actual number of outgoing network connection <= 1. defaults to true."
+    )
+    (
         "network.hosts_file",
         value<path>(&configured.network.hosts_file),
         "The peer hosts cache file path, defaults to 'hosts.cache'."
@@ -242,6 +270,16 @@ options_metadata parser::load_settings()
         "network.peer",
         value<config::endpoint::list>(&configured.network.peers),
         "Persistent host:port channels, multiple entries allowed."
+    )
+    (
+        "network.upnp_map_port",
+        value<bool>(&configured.network.upnp_map_port),
+        "Add a upnp map port in your router which has a extern address to allow connections to your local address."
+    )
+    (
+        "network.be_found",
+        value<bool>(&configured.network.be_found),
+        "If broadcast your upnp extern address on the network to allow others find you and connect you."
     )
     (
         "network.seed",
@@ -292,6 +330,11 @@ options_metadata parser::load_settings()
         value<config::checkpoint::list>(&configured.chain.checkpoints),
         "A hash:height checkpoint, multiple entries allowed."
     )
+    (
+        "blockchain.collect_split_stake",
+        value<bool>(&configured.chain.collect_split_stake),
+        "Automatically collect or split utxos for pos stake, defaults to true."
+    )
 
     /* [node] */
     (
@@ -311,11 +354,21 @@ options_metadata parser::load_settings()
     )
 
     /* [server] */
-	(
-		"server.mongoose_listen",
-		value<std::string>(&configured.server.mongoose_listen),
-		"the listening port for mongoose, defaults to 127.0.0.1:8820."
-	)
+    (
+        "server.administrator_required",
+        value<bool>(&configured.server.administrator_required),
+        "Whether wallet needs administrator to execute non-account commands(shutdown/getinfo...), defaults to false."
+    )
+    (
+        "server.mongoose_listen",
+        value<std::string>(&configured.server.mongoose_listen),
+        "The listening port for mongoose(Json-RPC), defaults to 127.0.0.1:8820."
+    )
+    (
+        "server.websocket_listen",
+        value<std::string>(&configured.server.websocket_listen),
+        "The listening port for websocket pub/sub service, defaults to 127.0.0.1:8821."
+    )
     (
         "server.query_workers",
         value<uint16_t>(&configured.server.query_workers),
@@ -337,9 +390,14 @@ options_metadata parser::load_settings()
         "The maximum number of subscriptions, defaults to 100000000."
     )
     (
-        "server.log_requests",
-        value<bool>(&configured.server.log_requests),
-        "Write service requests to the log, defaults to false."
+        "server.log_level",
+        value<std::string>(&configured.server.log_level),
+        "Setup log level of debug log in level [TRACE,DEBUG,INFO], defaults to DEBUG."
+    )
+    (
+        "server.rpc_version",
+        value<std::string>(&configured.server.rpc_version),
+        "Server RPC version, defaults to empty string, only used by mvs-cli."
     )
     (
         "server.secure_only",
@@ -365,6 +423,11 @@ options_metadata parser::load_settings()
         "server.transaction_service_enabled",
         value<bool>(&configured.server.transaction_service_enabled),
         "Enable the transaction publishing service, defaults to false."
+    )
+    (
+        "server.websocket_service_enabled",
+        value<bool>(&configured.server.websocket_service_enabled),
+        "Enable the websocket pub/sub service, defaults to false."
     )
     (
         "server.public_query_endpoint",
@@ -420,6 +483,26 @@ options_metadata parser::load_settings()
         "server.client_address",
         value<config::authority::list>(&configured.server.client_addresses),
         "Allowed client IP address, multiple entries allowed."
+    )
+    (
+        "server.rpc_client_addresses",
+        value<std::vector<std::string>>(&configured.server.rpc_client_addresses),
+        "Allowed RPC client IP address, multiple entries allowed."
+    )
+    (
+        "server.disable_account_operations",
+        value<bool>(&configured.chain.disable_account_operations),
+        "Disable account related operations for server security, defaults to false."
+    )
+    (
+        "server.allow_rpc_methods",
+        value<std::vector<std::string>>(&configured.server.allow_rpc_methods),
+        "Allowed rpc calling methods (regex), multiple entries allowed. Defaults to allow all."
+    )
+    (
+        "server.forbid_rpc_methods",
+        value<std::vector<std::string>>(&configured.server.forbid_rpc_methods),
+        "Forbidden rpc calling methods (regex), multiple entries allowed. Defaults to forbid none."
     );
 
     return description;
@@ -435,15 +518,29 @@ bool parser::parse(int argc, const char* argv[], std::ostream& error)
         load_environment_variables(variables, BS_ENVIRONMENT_VARIABLE_PREFIX);
 
         // Don't load the rest if any of these options are specified.
-        if (!get_option(variables, BS_VERSION_VARIABLE) && 
+        if (!get_option(variables, BS_VERSION_VARIABLE) &&
             !get_option(variables, BS_SETTINGS_VARIABLE) &&
             !get_option(variables, BS_HELP_VARIABLE))
         {
-        	if (get_option(variables, BS_TESTNET_VARIABLE))
-			{
-				configured.network.hosts_file = "hosts-test.cache";
-				const_cast<path&>(variables[BS_CONFIG_VARIABLE].as<path>()) = "mvs-test.conf";
-			}
+            if (get_option(variables, BS_TESTNET_VARIABLE))
+            {
+                configured.network.hosts_file = "hosts-test.cache";
+                configured.network.debug_file = "debug-test.log";
+                configured.network.error_file = "error-test.log";
+                auto config_file = variables[BS_CONFIG_VARIABLE];
+                if (config_file.empty() || config_file.defaulted()) {
+                    const_cast<path&>(variables[BS_CONFIG_VARIABLE].as<path>()) = "mvs-test.conf";
+                }
+            }
+            auto data_dir = variables[BS_DATADIR_VARIABLE].as<path>();
+            if (!data_dir.empty())
+            {
+                if (boost::filesystem::exists(data_dir) && !boost::filesystem::is_directory(data_dir))
+                {
+                    error << format_invalid_parameter("datadir path is invalid.") << std::endl;
+                    return false;
+                }
+            }
             // Returns true if the settings were loaded from a file.
             file = load_configuration_variables(variables, BS_CONFIG_VARIABLE);
         }

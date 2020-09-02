@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -31,53 +31,53 @@
 #include <boost/variant.hpp>
 #include <metaverse/bitcoin/chain/attachment/asset/asset_detail.hpp>
 #include <metaverse/bitcoin/chain/attachment/asset/asset_transfer.hpp>
+#include <metaverse/bitcoin/base_primary.hpp>
 
-using namespace libbitcoin::chain;
+namespace libbitcoin {
+namespace chain {
+class asset;
+}
+}
 
-#define ASSET_STATUS2UINT32(kd)  (static_cast<typename std::underlying_type<asset::asset_status>::type>(kd))
+#define ASSET_STATUS2UINT32(kd)  (static_cast<typename std::underlying_type<bc::chain::asset::asset_status>::type>(kd))
 
-#define ASSET_DETAIL_TYPE ASSET_STATUS2UINT32(asset::asset_status::asset_locked)
-#define ASSET_TRANSFERABLE_TYPE ASSET_STATUS2UINT32(asset::asset_status::asset_transferable)
+#define ASSET_DETAIL_TYPE ASSET_STATUS2UINT32(bc::chain::asset::asset_status::asset_locked)
+#define ASSET_TRANSFERABLE_TYPE ASSET_STATUS2UINT32(bc::chain::asset::asset_status::asset_transferable)
 
 namespace libbitcoin {
 namespace chain {
 
 class BC_API asset
+    : public base_primary<asset>
 {
 public:
-	enum class asset_status : uint32_t
-	{
-		asset_none,
-		asset_locked,
-		asset_transferable,
-	};
-	typedef boost::variant<asset_detail, asset_transfer> asset_data_type;
+    enum class asset_status : uint32_t
+    {
+        asset_none,
+        asset_locked,
+        asset_transferable,
+    };
+    typedef boost::variant<asset_detail, asset_transfer> asset_data_type;
 
-	asset();
-	asset(uint32_t status, const asset_detail& detail);
-	asset(uint32_t status, const asset_transfer& detail);
-    static asset factory_from_data(const data_chunk& data);
-    static asset factory_from_data(std::istream& stream);
-    static asset factory_from_data(reader& source);
+    asset();
+    asset(uint32_t status, const asset_detail& detail);
+    asset(uint32_t status, const asset_transfer& detail);
     static uint64_t satoshi_fixed_size();
 
-    bool from_data(const data_chunk& data);
-    bool from_data(std::istream& stream);
-    bool from_data(reader& source);
-    data_chunk to_data() const;
-    void to_data(std::ostream& stream) const;
-    void to_data(writer& sink) const;
+    bool from_data_t(reader& source);
+    void to_data_t(writer& sink) const;
     std::string to_string() const;
-	bool is_valid_type() const;
+    bool is_valid_type() const;
     bool is_valid() const;
     void reset();
     uint64_t serialized_size() const;
-	uint32_t get_status() const;
-	void set_status(uint32_t status);
-	void set_data(const asset_detail& detail);
-	void set_data(const asset_transfer& detail);
-	asset_data_type& get_data();
-	
+    uint32_t get_status() const;
+    void set_status(uint32_t status);
+    void set_data(const asset_detail& detail);
+    void set_data(const asset_transfer& detail);
+    asset_data_type& get_data();
+    const asset_data_type& get_data() const;
+
 private:
     uint32_t status;
     asset_data_type data;

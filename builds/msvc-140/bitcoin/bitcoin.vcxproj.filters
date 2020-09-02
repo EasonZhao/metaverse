@@ -111,6 +111,12 @@
     <Filter Include="Header Files\impl\utility">
       <UniqueIdentifier>{c8c20504-4b54-41e1-b579-cb1d645b59ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\chain\attachment\did">
+      <UniqueIdentifier>{5d7a4cb5-55b6-43ab-bf4e-3c6704029f87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\chain\attachment\did">
+      <UniqueIdentifier>{988d417c-c327-4d0d-8c55-d372478a4a90}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\lib\bitcoin\config\authority.cpp">
@@ -389,12 +395,6 @@
     <ClCompile Include="..\..\..\src\lib\bitcoin\message\address.cpp">
       <Filter>Source Files\message</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\lib\bitcoin\message\alert.cpp">
-      <Filter>Source Files\message</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\lib\bitcoin\message\alert_payload.cpp">
-      <Filter>Source Files\message</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\lib\bitcoin\message\block_message.cpp">
       <Filter>Source Files\message</Filter>
     </ClCompile>
@@ -556,6 +556,36 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\lib\bitcoin\error.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\asset_cert.cpp">
+      <Filter>Source Files\chain\attachment\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\dictionary_symbol.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\attenuation_model.cpp">
+      <Filter>Source Files\chain\attachment\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\did\did_detail.cpp">
+      <Filter>Source Files\chain\attachment\did</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\did\did.cpp">
+      <Filter>Source Files\chain\attachment\did</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\did\blockchain_did.cpp">
+      <Filter>Source Files\chain\attachment\did</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\asset_mit.cpp">
+      <Filter>Source Files\chain\attachment\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\output_point.cpp">
+      <Filter>Source Files\chain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\vrf_private.cpp">
+      <Filter>Source Files\wallet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\blockchain_cert.cpp">
+      <Filter>Source Files\chain\attachment\asset</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -796,9 +826,6 @@
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\math\checksum.hpp">
       <Filter>Header Files\math</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\alert_payload.hpp">
-      <Filter>Header Files\message</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\block_message.hpp">
       <Filter>Header Files\message</Filter>
     </ClInclude>
@@ -890,9 +917,6 @@
       <Filter>Header Files\message</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\address.hpp">
-      <Filter>Header Files\message</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\alert.hpp">
       <Filter>Header Files\message</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\unicode\console_streambuf.hpp">
@@ -1114,6 +1138,36 @@
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\utility\conditional_lock.hpp">
       <Filter>Header Files\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset_cert.hpp">
+      <Filter>Header Files\chain\attachment\asset</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\attenuation_model.hpp">
+      <Filter>Header Files\chain\attachment\asset</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\did\did_detail.hpp">
+      <Filter>Header Files\chain\attachment\did</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\did\did.hpp">
+      <Filter>Header Files\chain\attachment\did</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\did\blockchain_did.hpp">
+      <Filter>Header Files\chain\attachment\did</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset_mit.hpp">
+      <Filter>Header Files\chain\attachment\asset</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\base_primary.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\math\ecvrf.hpp">
+      <Filter>Header Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\wallet\vrf_private.hpp">
+      <Filter>Header Files\wallet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\blockchain_cert.hpp">
+      <Filter>Header Files\chain\attachment\asset</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\src\lib\bitcoin\wallet\parse_encrypted_keys\parse_encrypted_key.ipp">
@@ -1169,6 +1223,9 @@
     </None>
     <None Include="..\..\..\include\metaverse\bitcoin\impl\utility\array_slice.ipp">
       <Filter>Header Files\impl\utility</Filter>
+    </None>
+    <None Include="..\..\..\include\metaverse\bitcoin\impl\base_primary.ipp">
+      <Filter>Header Files\impl</Filter>
     </None>
   </ItemGroup>
 </Project>

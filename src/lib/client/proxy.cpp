@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-client.
  *
@@ -219,7 +219,7 @@ void proxy::address_fetch_unspent_outputs(error_handler on_error,
     history_handler parse_history = [on_reply, satoshi, algorithm](
         const chain::history::list& rows)
     {
-        chain::output_info::list unspent;
+        chain::output_point_info::list unspent;
         for(auto& row : rows)
             if (row.spend.hash == null_hash)
                 unspent.push_back({row.output, row.value});
@@ -324,7 +324,7 @@ bool proxy::decode_height(reader& payload, height_handler& handler)
 bool proxy::decode_block_header(reader& payload, block_header_handler& handler)
 {
     chain::header header;
-    if (!header.from_data(payload, false) || !payload.is_exhausted())
+    if (!header.from_data(payload) || !payload.is_exhausted())
         return false;
 
     handler(header);
@@ -345,7 +345,7 @@ bool proxy::decode_transaction_index(reader& payload,
 
 bool proxy::decode_validate(reader& payload, validate_handler& handler)
 {
-    point::indexes unconfirmed;
+    chain::point::indexes unconfirmed;
 
     while (!payload.is_exhausted())
     {
@@ -444,7 +444,7 @@ history::list proxy::expand(history_compact::list& compact)
         if (!found)
         {
             history row;
-            row.output = { null_hash, max_uint32 };
+            row.output = output_point( null_hash, max_uint32 );
             row.output_height = max_uint64;
             row.value = max_uint64;
             row.spend = spend.point;

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -147,7 +147,7 @@ bool is_public_key(data_slice point);
 
 /// Parse a DER encoded signature with optional strict DER enforcement.
 /// Treat an empty DER signature as invalid, in accordance with BIP66.
-BC_API bool parse_signature(ec_signature& out, 
+BC_API bool parse_signature(ec_signature& out,
     const der_signature& der_signature, bool strict);
 
 /// Encode an EC signature as DER (strict).

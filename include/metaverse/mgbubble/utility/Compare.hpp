@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS) - Metaverse.
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS) - Metaverse.
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation; either version 2 of the
@@ -63,9 +63,9 @@ class Comparable {
 };
 
 template <typename EnumT, typename std::enable_if_t<std::is_enum<EnumT>::value>* = nullptr>
-constexpr int compare(EnumT lhs, EnumT rhs) noexcept
+int compare(EnumT lhs, EnumT rhs) noexcept
 {
-  int i{};
+  int i = 0;
   if (lhs < rhs) {
     i = -1;
   } else if (lhs > rhs) {
@@ -78,9 +78,9 @@ constexpr int compare(EnumT lhs, EnumT rhs) noexcept
 
 template <typename IntegralT,
           typename std::enable_if_t<std::is_integral<IntegralT>::value>* = nullptr>
-constexpr int compare(IntegralT lhs, IntegralT rhs) noexcept
+int compare(IntegralT lhs, IntegralT rhs) noexcept
 {
-  int i{};
+  int i = 0;
   if (lhs < rhs) {
     i = -1;
   } else if (lhs > rhs) {

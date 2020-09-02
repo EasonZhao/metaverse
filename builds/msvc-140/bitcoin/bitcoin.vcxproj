@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -22,10 +14,17 @@
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\account\account.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\account\account_address.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\asset.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\asset_cert.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\asset_detail.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\asset_mit.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\asset_transfer.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\attenuation_model.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\blockchain_asset.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\asset\blockchain_cert.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\attachment.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\did\blockchain_did.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\did\did.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\did\did_detail.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\etp\etp.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\etp\etp_award.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\attachment\message\message.cpp" />
@@ -34,6 +33,7 @@
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\header.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\input.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\output.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\chain\output_point.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\point.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\point_iterator.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\chain\script\conditional_stack.cpp" />
@@ -85,8 +85,6 @@
     <ClCompile Include="..\..\..\src\lib\bitcoin\math\stealth.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\math\uint256.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\message\address.cpp" />
-    <ClCompile Include="..\..\..\src\lib\bitcoin\message\alert.cpp" />
-    <ClCompile Include="..\..\..\src\lib\bitcoin\message\alert_payload.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\message\block_message.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\message\block_transactions.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\message\compact_block.cpp" />
@@ -148,6 +146,7 @@
     <ClCompile Include="..\..\..\src\lib\bitcoin\utility\work.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\bitcoin_uri.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\dictionary.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\dictionary_symbol.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\ec_private.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\ec_public.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\ek_private.cpp" />
@@ -167,16 +166,25 @@
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\select_outputs.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\stealth_address.cpp" />
     <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\uri.cpp" />
+    <ClCompile Include="..\..\..\src\lib\bitcoin\wallet\vrf_private.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\base_primary.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\account\account.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\account\account_address.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset_cert.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset_detail.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset_interface.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset_mit.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\asset_transfer.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\attenuation_model.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\blockchain_asset.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\asset\blockchain_cert.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\attachment.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\did\blockchain_did.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\did\did.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\did\did_detail.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\etp\etp.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\etp\etp_award.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\chain\attachment\message\message.hpp" />
@@ -226,10 +234,9 @@
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\math\script_number.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\math\stealth.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\math\uint256.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\math\ecvrf.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\messages.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\address.hpp" />
-    <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\alert.hpp" />
-    <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\alert_payload.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\block_message.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\block_transactions.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\message\compact_block.hpp" />
@@ -334,6 +341,7 @@
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\wallet\stealth_address.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\wallet\uri.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\bitcoin\wallet\uri_reader.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\bitcoin\wallet\vrf_private.hpp" />
     <ClInclude Include="..\..\..\src\lib\bitcoin\chain\script\conditional_stack.hpp" />
     <ClInclude Include="..\..\..\src\lib\bitcoin\chain\script\evaluation_context.hpp" />
     <ClInclude Include="..\..\..\src\lib\bitcoin\math\external\aes256.h" />
@@ -356,6 +364,7 @@
     <ClInclude Include="..\..\..\src\lib\bitcoin\wallet\parse_encrypted_keys\parse_encrypted_token.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\include\metaverse\bitcoin\impl\base_primary.ipp" />
     <None Include="..\..\..\include\metaverse\bitcoin\impl\formats\base_16.ipp" />
     <None Include="..\..\..\include\metaverse\bitcoin\impl\formats\base_58.ipp" />
     <None Include="..\..\..\include\metaverse\bitcoin\impl\math\checksum.ipp" />
@@ -375,6 +384,11 @@
     <None Include="..\..\..\src\lib\bitcoin\wallet\parse_encrypted_keys\parse_encrypted_key.ipp" />
     <None Include="..\..\..\src\lib\bitcoin\wallet\parse_encrypted_keys\parse_encrypted_prefix.ipp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\sodium\sodium.vcxproj">
+      <Project>{b383014a-74fb-4241-a98a-be33b92e9ea3}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{54C72203-A5A0-4714-8D0C-D51AA4AABAC8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -382,19 +396,6 @@
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -413,12 +414,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -428,54 +423,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>libbitcoin-vc140-mt-gd</TargetName>
-    <IncludePath>..\..\..\..\metaverse\include;..\..\..\..\boost_1_63_0;..\..\..\..\secp256k1\include;..\..\..\src\lib\consensus\clone;..\..\..\contrib;..\..\..\..\zeromq-4.2.1\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>libbitcoin-vc140-mt</TargetName>
-    <IncludePath>..\..\..\..\metaverse\include;..\..\..\..\boost_1_63_0;..\..\..\..\secp256k1\include;..\..\..\src\lib\consensus\clone;..\..\..\contrib;..\..\..\..\zeromq-4.2.1\include;$(IncludePath)</IncludePath>
-    <IntDir>$(Platform)\$(Configuration)</IntDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_LIB;BC_STATIC;_CRT_SUPPRESS_RESTRICT;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;BC_STATIC;BCB_STATIC;_CRT_SUPPRESS_RESTRICT;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ObjectFileName>$(IntDir)a\a%(RelativeDir)</ObjectFileName>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\..\boost_1_63_0;..\..\..\..\secp256k1\include;..\..\..\src\lib\consensus\clone;..\..\..\contrib;..\..\..\contrib\sodium;..\..\..\..\zeromq-4.2.1\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;BC_STATIC;_CRT_SUPPRESS_RESTRICT;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -485,10 +451,11 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_LIB;BC_STATIC;_CRT_SUPPRESS_RESTRICT;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;_LIB;BC_STATIC;BCB_STATIC;_CRT_SUPPRESS_RESTRICT;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ObjectFileName>$(IntDir)a\a%(RelativeDir)</ObjectFileName>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\..\boost_1_63_0;..\..\..\..\secp256k1\include;..\..\..\src\lib\consensus\clone;..\..\..\..\zeromq-4.2.1\include;..\..\..\contrib;..\..\..\contrib\sodium</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

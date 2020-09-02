@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -40,6 +40,8 @@ public:
         network::channel::ptr channel, blockchain::block_chain& blockchain,
         blockchain::transaction_pool& pool);
 
+    ptr do_subscribe();
+
     /// Start the protocol.
     virtual void start();
 
@@ -65,9 +67,9 @@ private:
 
     blockchain::block_chain& blockchain_;
     blockchain::transaction_pool& pool_;
-    const bool refresh_pool_;
     const bool relay_from_peer_;
     const bool peer_suports_memory_pool_;
+    const bool refresh_pool_;
 };
 
 } // namespace node

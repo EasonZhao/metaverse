@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -124,7 +124,7 @@ bool sign_message(message_signature& signature, data_slice message,
     const std::string& wif)
 {
     ec_private secret(wif);
-    return (secret && 
+    return (secret &&
         sign_message(signature, message, secret, secret.compressed()));
 }
 

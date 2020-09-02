@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -43,6 +43,10 @@ settings::settings()
     channel_germination_seconds(30),
     host_pool_capacity(1000),
     relay_transactions(true),
+    enable_re_seeding(true),
+    upnp_map_port(true),
+    be_found(true),
+    use_ipv6(true),
     hosts_file("hosts.cache"),
     debug_file("debug.log"),
     error_file("error.log"),
@@ -71,6 +75,7 @@ settings::settings(bc::settings context)
             seeds.push_back({ "main-asia.mvs.live", 5251 });
             seeds.push_back({ "main-americas.mvs.live", 5251 });
             seeds.push_back({ "main-europe.mvs.live", 5251 });
+            seeds.push_back({ "seed.getmvs.org", 5251 });
             break;
         }
 
@@ -124,7 +129,7 @@ duration settings::channel_expiration() const
 duration settings::channel_germination() const
 {
     return seconds(channel_germination_seconds);
-} 
+}
 
 } // namespace network
 } // namespace libbitcoin

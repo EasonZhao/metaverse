@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -43,9 +43,17 @@ protocol_events::protocol_events(p2p& network, channel::ptr channel,
 // Properties.
 // ----------------------------------------------------------------------------
 
-bool protocol_events::stopped()
+bool protocol_events::stopped() const
 {
     return !handler_.load();
+}
+
+bool protocol_events::stopped(const code& ec) const
+{
+    // The service stop code may also make its way into protocol handlers.
+    return stopped() ||
+        ec.value() == error::channel_stopped ||
+        ec.value() == error::service_stopped;
 }
 
 // Start.
@@ -55,6 +63,8 @@ void protocol_events::start(event_handler handler)
 {
     handler_.store(handler);
     SUBSCRIBE_STOP1(handle_stopped, _1);
+    if (channel_stopped())
+        set_event(error::channel_stopped);
 }
 
 // Stop.
@@ -65,7 +75,7 @@ void protocol_events::handle_stopped(const code& ec)
     log::trace(LOG_NETWORK)
         << "Stop protocol_" << name() << " on [" << authority() << "] "
         << ec.message();
-    
+
     // Event handlers can depend on this code for channel stop.
     set_event(error::channel_stopped);
 }
@@ -79,7 +89,7 @@ void protocol_events::set_event(const code& ec)
     if (!handler)
         return;
 
-    if (ec == (code)error::channel_stopped)
+    if (ec.value() == error::channel_stopped)
         handler_.store(nullptr);
 
     handler(ec);

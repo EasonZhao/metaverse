@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -51,6 +51,10 @@ public:
     /// Get the header of the block at the given height.
     virtual bool get_header(chain::header& out_header,
         uint64_t height) const = 0;
+
+    virtual bool get_signature(ec_signature& blocksig, uint64_t height) const = 0;
+    virtual bool get_public_key(ec_compressed& public_key, uint64_t height) const = 0;
+    virtual bool get_signature_and_public_key(ec_signature& blocksig, ec_compressed& public_key, uint64_t height) const = 0;
 
     /// Get the height of the block with the given hash.
     virtual bool get_height(uint64_t& out_height,

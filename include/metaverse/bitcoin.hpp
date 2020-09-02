@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2015 libbitcoin developers (see COPYING).
+// Copyright (c) 2014-2020 libbitcoin developers (see COPYING).
 //
 //        GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 //
@@ -8,7 +8,7 @@
 #define MVS_BITCOIN_HPP
 
 /**
- * API Users: Include only this header. Direct use of other headers is fragile 
+ * API Users: Include only this header. Direct use of other headers is fragile
  * and unsupported as header organization is subject to change.
  *
  * Maintainers: Do not include this header internal to this library.
@@ -63,8 +63,6 @@
 #include <metaverse/bitcoin/math/stealth.hpp>
 #include <metaverse/bitcoin/math/uint256.hpp>
 #include <metaverse/bitcoin/message/address.hpp>
-#include <metaverse/bitcoin/message/alert.hpp>
-#include <metaverse/bitcoin/message/alert_payload.hpp>
 #include <metaverse/bitcoin/message/block_message.hpp>
 #include <metaverse/bitcoin/message/block_transactions.hpp>
 #include <metaverse/bitcoin/message/compact_block.hpp>

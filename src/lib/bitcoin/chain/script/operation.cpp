@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -24,6 +24,7 @@
 #include <sstream>
 #include <boost/iostreams/stream.hpp>
 #include <metaverse/bitcoin/chain/script/script.hpp>
+#include <metaverse/bitcoin/chain/point.hpp>
 #include <metaverse/bitcoin/formats/base_16.hpp>
 #include <metaverse/bitcoin/math/elliptic_curve.hpp>
 #include <metaverse/bitcoin/utility/container_sink.hpp>
@@ -35,6 +36,15 @@ namespace libbitcoin {
 namespace chain {
 
 const size_t operation::max_null_data_size = 80;
+
+operation operation::from_raw_data(const data_chunk& data)
+{
+    BITCOIN_ASSERT_MSG(data.size() > 0, "operation::from_raw_data must take non-empty raw data.");
+    operation instance;
+    instance.data = data;
+    instance.code = data_to_opcode(data);
+    return instance;
+}
 
 operation operation::factory_from_data(const data_chunk& data)
 {
@@ -189,6 +199,8 @@ uint64_t operation::serialized_size() const
 
 std::string operation::to_string(uint32_t flags) const
 {
+    flags = chain::get_script_context();
+
     std::ostringstream ss;
 
     if (data.empty())
@@ -219,6 +231,37 @@ bool operation::read_opcode_data_size(uint32_t& count, opcode code,
         default:
             return false;
     }
+}
+
+uint64_t operation::count_script_sigops(const operation::stack& operations, bool accurate)
+{
+    uint64_t total_sigs = 0;
+    opcode last_opcode = opcode::bad_operation;
+    for (const auto& op : operations)
+    {
+        if (op.code == opcode::checksig ||
+            op.code == opcode::checksigverify)
+        {
+            total_sigs++;
+        }
+        else if (op.code == opcode::checkmultisig ||
+                 op.code == opcode::checkmultisigverify)
+        {
+            if (accurate && within_op_n(last_opcode))
+            {
+                total_sigs += decode_op_n(last_opcode);
+            }
+            else
+            {
+                constexpr uint32_t multisig_default_sigops = 20;
+                total_sigs += multisig_default_sigops;
+            }
+        }
+
+        last_opcode = op.code;
+    }
+
+    return total_sigs;
 }
 
 uint64_t operation::count_non_push(const operation::stack& ops)
@@ -297,7 +340,8 @@ bool operation::is_pay_multisig_pattern(const operation::stack& ops)
     if (op_m < op_1 || op_m > op_n || op_n < op_1 || op_n > op_16)
         return false;
 
-    const auto n = op_n - op_1;
+    //const auto n = op_n - op_1;
+    const auto n = op_n - op_1 + 1u;
     const auto points = op_count - 3u;
 
     if (n != points)
@@ -351,6 +395,41 @@ bool operation::is_pay_script_hash_pattern(const operation::stack& ops)
         && ops[2].code == opcode::equal;
 }
 
+bool operation::is_pay_blackhole_pattern(const operation::stack& ops)
+{
+    return ops.size() == 1
+        && ops[0].code == opcode::return_;
+}
+
+bool operation::is_pay_key_hash_with_attenuation_model_pattern(const operation::stack& ops)
+{
+    return ops.size() == 8
+        && ops[0].code == opcode::pushdata2 // model param
+        && ops[1].code == opcode::special // input point
+        && ops[2].code == opcode::checkattenuationverify
+        && ops[3].code == opcode::dup
+        && ops[4].code == opcode::hash160
+        && ops[5].code == opcode::special
+        && ops[5].data.size() == short_hash_size
+        && ops[6].code == opcode::equalverify
+        && ops[7].code == opcode::checksig;
+}
+
+bool operation::is_pay_key_hash_with_sequence_lock_pattern(const operation::stack& ops)
+{
+    return ops.size() == 8
+        && ops[0].code == opcode::special
+        && ops[1].code == opcode::checksequenceverify
+        && ops[2].code == opcode::drop
+        && ops[3].code == opcode::dup
+        && ops[4].code == opcode::hash160
+        && ops[5].code == opcode::special
+        && ops[5].data.size() == short_hash_size
+        && ops[6].code == opcode::equalverify
+        && ops[7].code == opcode::checksig;
+}
+
+
 bool operation::is_sign_multisig_pattern(const operation::stack& ops)
 {
     if (ops.size() < 2 || !is_push_only(ops))
@@ -359,7 +438,12 @@ bool operation::is_sign_multisig_pattern(const operation::stack& ops)
     if (ops.front().code != opcode::zero)
         return false;
 
-    return true;
+    const auto found = [](const operation& op)
+    {
+        return op.code == opcode::special;
+    };
+
+    return std::all_of(ops.begin()+1, ops.end()-1, found);
 }
 
 bool operation::is_sign_public_key_pattern(const operation::stack& ops)
@@ -413,6 +497,22 @@ bool operation::is_sign_script_hash_pattern(const operation::stack& ops)
         || redeem_script_pattern == script_pattern::pay_key_hash
         || redeem_script_pattern == script_pattern::pay_script_hash
         || redeem_script_pattern == script_pattern::null_data;
+}
+
+const data_chunk& operation::get_model_param_from_pay_key_hash_with_attenuation_model(const operation::stack& ops)
+{
+    return ops[0].data;
+}
+
+const data_chunk& operation::get_input_point_from_pay_key_hash_with_attenuation_model(const operation::stack& ops)
+{
+    return ops[1].data;
+}
+
+uint32_t operation::get_lock_sequence_from_pay_key_hash_with_sequence_lock(const operation::stack& ops)
+{
+    CScriptNum num(ops[0].data, 1);
+    return static_cast<uint32_t>(num.getint64());
 }
 
 // pattern templates
@@ -522,6 +622,51 @@ operation::stack operation::to_pay_script_hash_pattern(const short_hash& hash)
         { opcode::special, to_chunk(hash) },
         { opcode::equal, {} }
     };
+}
+
+operation::stack operation::to_pay_blackhole_pattern(const short_hash&)
+{
+    return operation::stack
+    {
+        { opcode::return_, {} }
+    };
+}
+
+operation::stack operation::to_pay_key_hash_with_attenuation_model_pattern(
+    const short_hash& hash, const std::string& model_param, const point& input_point)
+{
+    return operation::stack
+    {
+        { opcode::pushdata2, to_chunk(model_param) },
+        { opcode::special, input_point.to_data() },
+        { opcode::checkattenuationverify, {} },
+        { opcode::dup, {} },
+        { opcode::hash160, {} },
+        { opcode::special, to_chunk(hash) },
+        { opcode::equalverify, {} },
+        { opcode::checksig, {} }
+    };
+}
+
+operation::stack operation::to_pay_key_hash_with_sequence_lock_pattern(const short_hash& hash, uint32_t sequence_lock)
+{
+    return operation::stack
+    {
+        { opcode::special, CScriptNum::serialize(sequence_lock) },
+        { opcode::checksequenceverify, {} },
+        { opcode::drop, {} },
+        { opcode::dup, {} },
+        { opcode::hash160, {} },
+        { opcode::special, to_chunk(hash) },
+        { opcode::equalverify, {} },
+        { opcode::checksig, {} }
+    };
+}
+
+
+bool operation::operator==(const operation& other) const
+{
+    return code == other.code && data == other.data;
 }
 
 } // namspace chain

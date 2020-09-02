@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2017 mvs developers 
+ * Copyright (c) 2016-2020 mvs developers
  *
  * This file is part of metaverse-explorer.
  *
@@ -27,34 +27,40 @@
 #include <metaverse/explorer/define.hpp>
 #include <metaverse/explorer/command.hpp>
 #include <metaverse/bitcoin/chain/attachment/asset/asset_detail.hpp>  // used for createasset
-#include <metaverse/explorer/config/metaverse_output.hpp>
 #include <metaverse/server/server_node.hpp>
 
 namespace libbitcoin {
 namespace explorer {
 namespace commands {
 
-struct prikey_amount{
+constexpr const char* DEFAULT_INVALID_ASSET_SYMBOL = "#(DEFAULT INVALID ASSET SYMBOL);";
+#define is_default_invalid_asset_symbol(s) ((s) == (DEFAULT_INVALID_ASSET_SYMBOL))
+
+
+struct prikey_amount
+{
     std::string first;
     uint64_t    second;
 };
 
-struct prikey_etp_amount{
+struct prikey_etp_amount
+{
     std::string key;
     uint64_t    value;
     uint64_t    asset_amount;
-    output_point output;
+    chain::output_point output;
 };
 
-struct utxo_attach_info {
-	//target:1:asset-transfer:symbol:amount
-	std::string target;
+struct utxo_attach_info
+{
+    //target:1:asset-transfer:symbol:amount
+    std::string target;
     uint32_t version;
     std::string type;
-	std::string symbol;
+    std::string symbol;
     uint64_t amount;
-	uint64_t value; // etp
-	std::string output_option; // used by get_tx_encode
+    uint64_t value; // etp
+    std::string output_option; // used by get_tx_encode
 };
 
 template<class T1, class T2>
@@ -65,45 +71,86 @@ public:
     /**
      * Default constructor.
      */
-	colon_delimited2_item()
-	{
-	};
-	
+    colon_delimited2_item()
+    {
+    };
+
     colon_delimited2_item(T1 first, T2 second)
-	: first_(first), second_(second)
-	{
-	};
-    
+        : first_(first), second_(second)
+    {
+    };
+
     /**
      * Initialization constructor.
      * @param[in]  tuple  The value to initialize with.
      */
     colon_delimited2_item(const std::string& tuple)
     {
-	    std::stringstream(tuple) >> *this;
-	};
+        std::stringstream(tuple) >> *this;
+    };
 
-	
-	static bool decode_colon_delimited(colon_delimited2_item<T1, T2>& height, const std::string& tuple)
-	{
-		const auto tokens = split(tuple, BX_TX_POINT_DELIMITER);
-		if (tokens.size() != 2)
-			return false;
-	
-		deserialize(height.first_, tokens[0], true);
-		deserialize(height.second_, tokens[1], true);
-	
-		return true;
-	};
-	
-	// colon_delimited2_item is currently a private encoding in bx.
-	static std::string encode_colon_delimited(const colon_delimited2_item<T1, T2>& height)
-	{
-		std::stringstream result;
-		result << height.first_ << BX_TX_POINT_DELIMITER <<
-			height.second_;
-		return result.str();
-	};
+    static bool decode_colon_delimited(colon_delimited2_item<T1, T2>& height, const std::string& tuple)
+    {
+        const auto tokens = split(tuple, BX_TX_POINT_DELIMITER);
+        if (tokens.size() != 2)
+            return false;
+
+        if (!tokens[0].empty()) {
+            deserialize(height.first_, tokens[0], true);
+        } else if (std::is_arithmetic<T1>::value) {
+            height.first_ = std::numeric_limits<T1>::min();
+        } else {
+            height.first_ = T1();
+        }
+
+        if (!tokens[1].empty()) {
+            deserialize(height.second_, tokens[1], true);
+        } else if (std::is_arithmetic<T2>::value) {
+            height.second_ = std::numeric_limits<T2>::max();
+        } else {
+            height.second_ = T2();
+        }
+
+        return true;
+    };
+
+    // colon_delimited2_item is currently a private encoding in bx.
+    static std::string encode_colon_delimited(const colon_delimited2_item<T1, T2>& height)
+    {
+        std::stringstream result;
+        result << height.first_ << BX_TX_POINT_DELIMITER << height.second_;
+        return result.str();
+    };
+
+    std::string encode_colon_delimited()
+    {
+        return encode_colon_delimited(*this);
+    }
+
+    bool is_default() const
+    {
+        return first_ == T1() && second_ == T2();
+    }
+
+    template<typename T3>
+    bool is_in_range(T3 value, bool default_ok=true) const
+    {
+        if (std::is_arithmetic<T1>::value &&
+            std::is_arithmetic<T2>::value &&
+            std::is_arithmetic<T3>::value) {
+            return (default_ok && is_default()) || (first_ <= value && value < second_);
+        }
+        return false;
+    }
+
+    bool is_valid(bool default_ok=true) const
+    {
+        if (std::is_arithmetic<T1>::value &&
+            std::is_arithmetic<T2>::value) {
+            return (default_ok && is_default()) || (first_ < second_);
+        }
+        return true;
+    }
 
     /**
      * Overload stream in. Throws if colon_delimited2_item is invalid.
@@ -111,20 +158,17 @@ public:
      * @param[out]  argument  The object to receive the read value.
      * @return                The colon_delimited2_item stream reference.
      */
-    friend std::istream& operator>>(std::istream& stream,
-        colon_delimited2_item& argument)
+    friend std::istream& operator>>(std::istream& stream, colon_delimited2_item& argument)
     {
-        
-	    std::string tuple;
-	    stream >> tuple;
+        std::string tuple;
+        stream >> tuple;
 
-	    if (!decode_colon_delimited(argument, tuple))
-	    {
-	        throw std::logic_error{"invalid option " + tuple};
-	    }
+        if (!decode_colon_delimited(argument, tuple)) {
+            throw std::logic_error{"invalid colon delimited option " + tuple};
+        }
 
-	    return stream;
-	};
+        return stream;
+    };
 
     /**
      * Overload stream out.
@@ -132,41 +176,47 @@ public:
      * @param[out]  argument  The object from which to obtain the value.
      * @return                The output stream reference.
      */
-    friend std::ostream& operator<<(std::ostream& output,
-        const colon_delimited2_item& argument)
+    friend std::ostream& operator<<(std::ostream& output, const colon_delimited2_item& argument)
     {
-	    output << encode_colon_delimited(argument);
-	    return output;
-	};
-	// get method
-	T1 first(){
-		return first_;
-	};
-	
-	void set_first(const T1& first){
-		first_ = first;
-	};
-	
-	T2 second(){
-		return second_;
-	};
+        output << encode_colon_delimited(argument);
+        return output;
+    };
 
-	void set_second(const T2& second){
-		second_ = second;
-	};
-	
+    // get method
+    T1 first()
+    {
+        return first_;
+    };
+
+    void set_first(const T1& first)
+    {
+        first_ = first;
+    };
+
+    T2 second()
+    {
+        return second_;
+    };
+
+    void set_second(const T2& second)
+    {
+        second_ = second;
+    };
+
 private:
-	/**
+    /**
      * The state of this object. only for uint64_t
      */
     T1 first_;
     T2 second_;
 };
 
-class command_extension:public command{
+class command_extension: public command
+{
+    using command::invoke;
 public:
-    virtual console_result invoke(std::ostream& output,
-        std::ostream& error, libbitcoin::server::server_node& node)
+    virtual console_result invoke(Json::Value& jv_output,
+        libbitcoin::server::server_node& node)
     {
         return console_result::failure;
     }
@@ -179,18 +229,21 @@ protected:
     } auth_;
 };
 
-class send_command: public command_extension{
+class send_command: public command_extension
+{
 public:
-	virtual bool is_block_height_fullfilled(uint64_t height) override{
-		if (height >= 200000) {
-			return true;
-		}
-		return false;
-	}
+    virtual bool is_block_height_fullfilled(uint64_t height) override
+    {
+        if (height >= minimum_block_height()) {
+            return true;
+        }
+        return false;
+    }
 
-	virtual uint64_t minimum_block_height() override{
-		return 200000;
-	}
+    virtual uint64_t minimum_block_height() override
+    {
+        return 610000;
+    }
 };
 
 

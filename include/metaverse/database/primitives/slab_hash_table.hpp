@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -65,11 +65,14 @@ public:
     /// Returns the position of the inserted value in the slab_manager.
     file_offset store(const KeyType& key, write_function write,
         const size_t value_size);
-	file_offset restore(const KeyType& key,
-		write_function write, const size_t value_size);
+    file_offset restore(const KeyType& key,
+        write_function write, const size_t value_size);
     /// Find the slab for a given hash. Returns a null pointer if not found.
     const memory_ptr find(const KeyType& key) const;
-	std::shared_ptr<std::vector<memory_ptr>> find(uint64_t index) const;
+    std::shared_ptr<std::vector<memory_ptr>> find(uint64_t index) const;
+    const memory_ptr rfind(const KeyType& key) const;
+    std::vector<memory_ptr> finds(const KeyType& key) const;
+
     /// Delete a key-value pair from the hashtable by unlinking the node.
     bool unlink(const KeyType& key);
 

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -41,22 +41,23 @@ class BC_API authority
 public:
     /**
      * A list of authorities.
-     * This must provide operator<< for ostream in order to be used as a 
+     * This must provide operator<< for ostream in order to be used as a
      * boost::program_options default_value.
      */
     typedef std::vector<authority> list;
+    typedef std::shared_ptr<authority> ptr;
 
     /**
      * Default constructor.
      */
     authority();
-    
+
     /**
      * Copy constructor.
      * @param[in]  other  The object to copy into self on construct.
      */
     authority(const authority& other);
-    
+
     /**
      * Initialization constructor.
      * Deserialize a IPv4 or IPv6 address-based hostname[:port].
@@ -65,20 +66,20 @@ public:
      *                        [2001:db8::2]:port or 1.2.240.1:port
      */
     authority(const std::string& authority);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  net  The network address (ip and port) to initialize with.
      */
     authority(const message::network_address& address);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  ip    The ip addresss to initialize with.
      * @param[in]  port  The port to initialize with.
      */
     authority(const message::ip_address& ip, uint16_t port);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  host  The host to initialize with in one of three forms:
@@ -86,14 +87,14 @@ public:
      * @param[in]  port  The port to initialize with.
      */
     authority(const std::string& host, uint16_t port);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  ip    The boost ip addresss to initialize with.
      * @param[in]  port  The port to initialize with.
      */
     authority(const asio::address& ip, uint16_t port);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  endpoint  The boost endpoint addresss to initialize with.
@@ -111,14 +112,14 @@ public:
      * @return The tcp port of the authority.
      */
     uint16_t port() const;
-    
+
     /**
      * Get the hostname of the authority as a string.
      * The form of the return is determined by the type of address.
      * @return The hostname in one of two forms: 2001:db8::2 or 1.2.240.1
      */
     std::string to_hostname() const;
-    
+
     /**
      * Get the authority as a string.
      * The form of the return is determined by the type of address.

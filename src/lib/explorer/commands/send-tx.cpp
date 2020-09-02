@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -53,7 +53,7 @@ console_result send_tx::invoke(std::ostream& output, std::ostream& error)
 
     auto on_done = [&state]()
     {
-        state.output(BX_SEND_TX_OUTPUT);
+        state.output(std::string(BX_SEND_TX_OUTPUT));
     };
 
     auto on_error = [&state](const code& error)
@@ -67,6 +67,6 @@ console_result send_tx::invoke(std::ostream& output, std::ostream& error)
     return state.get_result();
 }
 
-} //namespace commands 
-} //namespace explorer 
-} //namespace libbitcoin 
+} //namespace commands
+} //namespace explorer
+} //namespace libbitcoin

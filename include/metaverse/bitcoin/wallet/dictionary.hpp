@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -57,6 +57,17 @@ namespace language
 
     // All built-in languages:
     extern const dictionary_list all;
+}
+
+namespace symbol
+{
+    // built in ban dict (upper case):
+    bool is_sensitive(const std::string& symbol);
+
+    // built in forbidden dict (upper case):
+    bool is_forbidden(const std::string& symbol);
+
+    // All built-in ban list:
 }
 
 } // namespace wallet

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -106,7 +106,7 @@ void protocol_header_sync::send_get_headers(event_handler complete)
 
 void protocol_header_sync::handle_send(const code& ec, event_handler complete)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     if (ec)
@@ -121,7 +121,7 @@ void protocol_header_sync::handle_send(const code& ec, event_handler complete)
 bool protocol_header_sync::handle_receive(const code& ec, headers_ptr message,
     event_handler complete)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -151,7 +151,7 @@ bool protocol_header_sync::handle_receive(const code& ec, headers_ptr message,
     // If we completed the last height the sync is complete/success.
     if (next > last_.height())
     {
-    	log::trace(LOG_NODE) << "protocol header sync handle receive complete";
+        log::trace(LOG_NODE) << "protocol header sync handle receive complete";
         complete(error::success);
         return false;
     }
@@ -159,7 +159,7 @@ bool protocol_header_sync::handle_receive(const code& ec, headers_ptr message,
     // If we received fewer than 2000 the peer is exhausted, try another.
     if (message->elements.size() < max_header_response)
     {
-    	log::trace(LOG_NODE) << "protocol header sync handle receive message size < max header response";
+        log::trace(LOG_NODE) << "protocol header sync handle receive message size < max header response";
         complete(error::operation_failed);
         return false;
     }
@@ -172,13 +172,13 @@ bool protocol_header_sync::handle_receive(const code& ec, headers_ptr message,
 // This is fired by the base timer and stop handler.
 void protocol_header_sync::handle_event(const code& ec, event_handler complete)
 {
-    if (ec == (code)error::channel_stopped)
+    if (ec && ec.value() == error::channel_stopped)
     {
         complete(ec);
         return;
     }
 
-    if (ec && ec != (code)error::channel_timeout)
+    if (ec && ec.value() != error::channel_timeout)
     {
         log::warning(LOG_NODE)
             << "Failure in header sync timer for [" << authority() << "] "
@@ -205,7 +205,7 @@ void protocol_header_sync::headers_complete(const code& ec,
     event_handler handler)
 {
 
-	// This is end of the header sync sequence.
+    // This is end of the header sync sequence.
     handler(ec);
 
     // The session does not need to handle the stop.

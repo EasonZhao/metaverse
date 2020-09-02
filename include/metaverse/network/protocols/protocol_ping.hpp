@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -43,8 +43,6 @@ class BCT_API protocol_ping
 {
 public:
     typedef std::shared_ptr<protocol_ping> ptr;
-    using result_handler = std::function<void(const code&)>;
-    using ready_handler = std::function<void()>;
 
     /**
      * Construct a ping protocol instance.
@@ -53,10 +51,12 @@ public:
      */
     protocol_ping(p2p& network, channel::ptr channel);
 
+    ptr do_subscribe();
+
     /**
      * Start the protocol.
      */
-    virtual void start(result_handler handler);
+    virtual void start();
 
     void handle_or_not(uint64_t nonce);
 
@@ -68,8 +68,6 @@ private:
         uint64_t nonce);
 
     const settings& settings_;
-    result_handler result_handler_;
-    shared_mutex mutex_;
 };
 
 } // namespace network

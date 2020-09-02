@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -55,7 +55,7 @@ void connections::stop(const code& ec)
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
         stopped_ = true;
-        mutex_.unlock_and_lock_upgrade(); 
+        mutex_.unlock_and_lock_upgrade();
         //---------------------------------------------------------------------
 
         // Once stopped this list cannot change, but must copy to escape lock.
@@ -103,14 +103,15 @@ void connections::exists(const authority& address, truth_handler handler) const
 
 config::authority::list connections::authority_list()
 {
-	config::authority::list address_list{channels_.size()};
-	mutex_.lock_upgrade();
-	std::find_if(channels_.begin(), channels_.end(), [&address_list](channel::ptr channel){
-		address_list.push_back(channel->authority());
-		return false;
-	});
-	mutex_.unlock_upgrade();
-	return address_list;
+    config::authority::list address_list;
+    address_list.reserve(channels_.size());
+    mutex_.lock_upgrade();
+    std::find_if(channels_.begin(), channels_.end(), [&address_list](channel::ptr channel){
+        address_list.push_back(channel->authority());
+        return false;
+    });
+    mutex_.unlock_upgrade();
+    return address_list;
 }
 
 bool connections::safe_remove(channel::ptr channel)
@@ -141,6 +142,21 @@ bool connections::safe_remove(channel::ptr channel)
 void connections::remove(channel::ptr channel, result_handler handler)
 {
     handler(safe_remove(channel) ? error::success : error::not_found);
+}
+
+void connections::stop(const config::authority& address)
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(mutex_);
+
+    for(auto it = channels_.begin(); it != channels_.end(); ++it)
+    {
+        if ( (*it)->authority().ip() == address.ip())
+        {
+            (*it)->stop(error::address_blocked);
+        }
+    }
 }
 
 code connections::safe_store(channel::ptr channel)

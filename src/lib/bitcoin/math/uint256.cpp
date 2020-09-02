@@ -1,5 +1,5 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2020 Satoshi Nakamoto
+// Copyright (c) 2009-2020 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -102,7 +102,7 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
     base_uint<BITS> div = b;
 
     // make a copy, so we can subtract.
-    base_uint<BITS> num = *this; 
+    base_uint<BITS> num = *this;
 
     // the quotient.
     *this = 0;
@@ -232,18 +232,18 @@ uint32_t uint256_t::GetCompact(bool fNegative) const
 
 // This implementation directly uses shifts instead of going
 // through an intermediate MPI representation.
-uint256_t& uint256_t::SetCompact(uint32_t nCompact, bool* pfNegative, 
+uint256_t& uint256_t::SetCompact(uint32_t nCompact, bool* pfNegative,
     bool* pfOverflow)
 {
     int nSize = nCompact >> 24;
     uint32_t nWord = nCompact & 0x007fffff;
 
-    if (nSize <= 3) 
+    if (nSize <= 3)
     {
         nWord >>= 8 * (3 - nSize);
         *this = nWord;
     }
-    else 
+    else
     {
         *this = nWord;
         *this <<= 8 * (nSize - 3);

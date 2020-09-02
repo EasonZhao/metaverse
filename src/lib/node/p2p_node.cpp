@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-node.
  *
@@ -42,7 +42,7 @@ using namespace std::placeholders;
 
 p2p_node::p2p_node(const configuration& configuration)
   : p2p(configuration.network),
-    hashes_(configuration.chain.checkpoints),
+    hashes_(configuration.chain.basic_checkpoints),
     blockchain_(thread_pool(), configuration.chain, configuration.database),
     settings_(configuration.node)
 {
@@ -168,8 +168,11 @@ void p2p_node::handle_running(const code& ec, result_handler handler)
 bool p2p_node::handle_reorganized(const code& ec, size_t fork_point,
     const block_ptr_list& incoming, const block_ptr_list& outgoing)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped() || ec.value() == error::service_stopped)
         return false;
+
+    if (ec.value() == error::mock)
+        return true;
 
     if (ec)
     {
@@ -213,7 +216,7 @@ network::session_outbound::ptr p2p_node::attach_outbound_session()
 
 session_header_sync::ptr p2p_node::attach_header_sync_session()
 {
-    const auto& checkpoints = blockchain_.chain_settings().checkpoints;
+    const auto& checkpoints = blockchain_.chain_settings().basic_checkpoints;
     return attach<session_header_sync>(hashes_, blockchain_, checkpoints);
 }
 

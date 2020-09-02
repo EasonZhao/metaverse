@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -39,7 +39,7 @@ BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 base_database::base_database(const path& map_filename,
     std::shared_ptr<shared_mutex> mutex)
-  : lookup_file_(map_filename, mutex), 
+  : lookup_file_(map_filename, mutex),
     lookup_header_(lookup_file_, number_buckets),
     lookup_manager_(lookup_file_, header_size),
     lookup_map_(lookup_header_, lookup_manager_)
@@ -116,12 +116,11 @@ void base_database::sync()
 {
     lookup_manager_.sync();
 }
-#if 0
-base_database::slab_map& base_database::get_lookup_map()
+
+size_t base_database::get_bucket_count() const
 {
-	return lookup_map_;
+    return lookup_header_.size();
 }
-#endif
 
 } // namespace database
 } // namespace libbitcoin

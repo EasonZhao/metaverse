@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -36,6 +36,7 @@ namespace wallet {
 //chenhao bad modify
 uint8_t payment_address::mainnet_p2kh = 0x32;
 const uint8_t payment_address::mainnet_p2sh = 0x05;
+const std::string payment_address::blackhole_address = "1111111111111111111114oLvT2";
 
 payment_address::payment_address()
   : valid_(false), version_(0), hash_(null_short_hash)
@@ -266,6 +267,17 @@ payment_address payment_address::extract(const chain::script& script,
             BITCOIN_ASSERT(ops.size() == 3);
             BITCOIN_ASSERT(ops[1].data.size() == short_hash_size);
             break;
+        case chain::script_pattern::pay_blackhole_address:
+            BITCOIN_ASSERT(ops.size() == 1);
+            break;
+        case chain::script_pattern::pay_key_hash_with_attenuation_model:
+            BITCOIN_ASSERT(ops.size() == 8);
+            BITCOIN_ASSERT(ops[5].data.size() == short_hash_size);
+            break;
+        case chain::script_pattern::pay_key_hash_with_sequence_lock:
+            BITCOIN_ASSERT(ops.size() == 8);
+            BITCOIN_ASSERT(ops[5].data.size() == short_hash_size);
+            break;
 
         // sign
         // --------------------------------------------------------------------
@@ -325,12 +337,45 @@ payment_address payment_address::extract(const chain::script& script,
         case chain::script_pattern::pay_script_hash:
             hash = to_array<short_hash_size>(ops[1].data);
             return payment_address(hash, p2sh_version);
-            
+
+        case chain::script_pattern::pay_blackhole_address:
+            return payment_address(blackhole_address);
+
+        case chain::script_pattern::pay_key_hash_with_attenuation_model:
+            hash = to_array<short_hash_size>(ops[5].data);
+            return payment_address(hash, p2kh_version);
+
+        case chain::script_pattern::pay_key_hash_with_sequence_lock:
+            hash = to_array<short_hash_size>(ops[5].data);
+            return payment_address(hash, p2kh_version);
+
         // sign
         // --------------------------------------------------------------------
 
         case chain::script_pattern::sign_multisig:
-            return payment_address();
+        {
+            bc::chain::script redeem_script;
+            // extract address from multisig payment script
+            // zero sig1 sig2 ... encoded-multisig
+            const auto& redeem_data = ops.back().data;
+
+            if (redeem_data.empty())
+                return payment_address(); //throw std::logic_error{"empty redeem script."};
+
+            if (!redeem_script.from_data(redeem_data, false, bc::chain::script::parse_mode::strict))
+                return payment_address(); //throw std::logic_error{"error occured when parse redeem script data."};
+
+            // Is the redeem script a standard pay (output) script?
+            const auto redeem_script_pattern = redeem_script.pattern();
+            if(redeem_script_pattern != chain::script_pattern::pay_multisig)
+                return payment_address(); //throw std::logic_error{"redeem script is not pay multisig pattern."};
+
+            const payment_address address(redeem_script, 5);
+            //auto addr_str = address.encoded(); // pay address
+            //log::trace("input_addr")<<redeem_script.to_string(false);
+            //log::trace("input_addr")<<addr_str;
+            return address;
+        }
 
         case chain::script_pattern::sign_public_key:
             return payment_address();

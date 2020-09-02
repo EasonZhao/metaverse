@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -53,9 +53,9 @@
 // Regarding Unicode in console applications:
 //
 // BC_USE_MVS_MAIN should be declared prior to bc::main() in a console
-// application. This enables Unicode argument and environment processing in 
-// Windows. This macro implements main() and forwards to bc::main(), which 
-// should be implemented as if it was main() with the expectation that argv 
+// application. This enables Unicode argument and environment processing in
+// Windows. This macro implements main() and forwards to bc::main(), which
+// should be implemented as if it was main() with the expectation that argv
 // is utf8.
 //
 // Do not use std::cout|std::cerr|std::cin (aborts on assertion):
@@ -72,7 +72,7 @@
 //
 // When working with boost and utf8 narrow characters on Windows the thread
 // must be configured for utf8. When working with boost::filesystem::path the
-// static path object must be imbued with the utf8 locale or paths will be 
+// static path object must be imbued with the utf8 locale or paths will be
 // incorrectly translated.
 
 #define BC_LOCALE_BACKEND "icu"
@@ -90,15 +90,14 @@
         \
         int wmain(int argc, wchar_t* argv[]) \
         { \
-            using namespace libbitcoin; \
             boost::locale::generator locale; \
             std::locale::global(locale(BC_LOCALE_UTF8)); \
             boost::filesystem::path::imbue(std::locale()); \
             \
-            auto variables = to_utf8(_wenviron); \
+            auto variables = bc::to_utf8(_wenviron); \
             environ = reinterpret_cast<char**>(variables.data()); \
             \
-            auto arguments = to_utf8(argc, argv); \
+            auto arguments = bc::to_utf8(argc, argv); \
             auto args = reinterpret_cast<char**>(arguments.data()); \
             \
             return libbitcoin::main(argc, args); \

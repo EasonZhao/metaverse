@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -20,21 +20,22 @@
  */
 
 #include <metaverse/explorer/commands/offline_commands_impl.hpp>
+#include <metaverse/explorer/extensions/exception.hpp>
 
 namespace libbitcoin {
 namespace explorer {
 namespace commands {
 
 //seed
-data_chunk get_seed(uint16_t bit_length = 256u)
+data_chunk get_seed(uint16_t bit_length)
 {
     // These are soft requirements for security and rationality.
     // We use bit vs. byte length input as the more familiar convention.
     if (bit_length < minimum_seed_size * byte_bits ||
         bit_length % byte_bits != 0)
     {
-		// chenhao exception
-        throw std::logic_error{MVSCLI_SEED_BIT_LENGTH_UNSUPPORTED};
+        // chenhao exception
+        throw seed_size_exception{MVSCLI_SEED_BIT_LENGTH_UNSUPPORTED};
     }
 
     return new_seed(bit_length);
@@ -47,8 +48,8 @@ bw::word_list get_mnemonic_new(const bw::dictionary_list& language, const data_c
 
     if ((entropy_size % bw::mnemonic_seed_multiple) != 0)
     {
-		// chenhao exception
-        throw std::logic_error{MVSCLI_EC_MNEMONIC_NEW_INVALID_ENTROPY};
+        // chenhao exception
+        throw seed_length_exception{MVSCLI_EC_MNEMONIC_NEW_INVALID_ENTROPY};
     }
 
     // If 'any' default to first ('en'), otherwise the one specified.
@@ -58,16 +59,44 @@ bw::word_list get_mnemonic_new(const bw::dictionary_list& language, const data_c
 
 
 //mnemonic-to-seed
-data_chunk get_mnemonic_to_seed(const bw::dictionary_list& language, 
-    const std::string& passphrase, 
-    const bw::word_list& words)
+data_chunk get_mnemonic_to_seed(const bw::dictionary_list& language,
+    const bw::word_list& words,
+    std::string passphrase)
 {
     const auto word_count = words.size();
 
+    if (word_count == 0)
+    {
+        throw mnemonicwords_empty_exception{MVSCLI_EC_MNEMONIC_TO_SEED_EMPTY_WORDS};
+    }
+
     if ((word_count % bw::mnemonic_word_multiple) != 0)
     {
-		// chenhao exception
-        throw std::logic_error{MVSCLI_EC_MNEMONIC_TO_SEED_LENGTH_INVALID_SENTENCE};
+        // chenhao exception
+        throw mnemonicwords_amount_exception{MVSCLI_EC_MNEMONIC_TO_SEED_LENGTH_INVALID_SENTENCE};
+    }
+
+    // check if mnemonic words are all in someone/specified dictionary
+    bool all_word_in_dictionary = true;
+    for (const auto& lexicon: language)
+    {
+        all_word_in_dictionary = true;
+        for (const auto& word: words)
+        {
+            if (std::find(lexicon->begin(), lexicon->end(), word) == lexicon->end())
+            {
+                all_word_in_dictionary = false;
+                break;
+            }
+        }
+        if (all_word_in_dictionary)
+        {
+            break;
+        }
+    }
+    if (!all_word_in_dictionary)
+    {
+        throw mnemonicwords_content_exception{MVSCLI_EC_MNEMONIC_TO_SEED_WORD_NOT_IN_DICTIONARY};
     }
 
     const auto valid = bw::validate_mnemonic(words, language);
@@ -75,13 +104,13 @@ data_chunk get_mnemonic_to_seed(const bw::dictionary_list& language,
     if (!valid && language.size() == 1)
     {
         // This is fatal because a dictionary was specified explicitly.
-		// chenhao exception
-        throw std::logic_error{MVSCLI_EC_MNEMONIC_TO_SEED_INVALID_IN_LANGUAGE};
+        // chenhao exception
+        throw mnemonicwords_content_exception{MVSCLI_EC_MNEMONIC_TO_SEED_INVALID_IN_LANGUAGE};
     }
 
-	// chenhao exception
+    // chenhao exception
     if (!valid && language.size() > 1)
-        throw std::logic_error{MVSCLI_EC_MNEMONIC_TO_SEED_INVALID_IN_LANGUAGES};
+        throw mnemonicwords_content_exception{MVSCLI_EC_MNEMONIC_TO_SEED_INVALID_IN_LANGUAGES};
 
 #ifdef WITH_ICU
     // Any word set divisible by 3 works regardless of language validation.
@@ -89,25 +118,24 @@ data_chunk get_mnemonic_to_seed(const bw::dictionary_list& language,
 #else
     if (!passphrase.empty())
     {
-	    // chenhao exception
-        throw std::logic_error{MVSCLI_EC_MNEMONIC_TO_SEED_PASSPHRASE_UNSUPPORTED};
+        // chenhao exception
+        throw mnemonicwords_content_exception{MVSCLI_EC_MNEMONIC_TO_SEED_PASSPHRASE_UNSUPPORTED};
     }
 
     // The passphrase requires ICU normalization.
     const auto seed = bw::decode_mnemonic(words);
 #endif
 
-    const data_chunk& dc_seed = bc::config::base16(seed);
-    return dc_seed;
+    return bc::config::base16(seed);
 }
 
 //hd-new
-bw::hd_private get_hd_new(const data_chunk& seed, uint32_t version = hd_default_secret_version)
+bw::hd_private get_hd_new(const data_chunk& seed, uint32_t version)
 {
     if (seed.size() < minimum_seed_size)
     {
-	    // chenhao exception
-        throw std::logic_error{MVSCLI_HD_NEW_SHORT_SEED};
+        // chenhao exception
+        throw hd_length_exception{MVSCLI_HD_NEW_SHORT_SEED};
     }
 
     // We require the private version, but public is unused here.
@@ -116,13 +144,13 @@ bw::hd_private get_hd_new(const data_chunk& seed, uint32_t version = hd_default_
 
     if (!private_key)
     {
-	    // chenhao exception
-        throw std::logic_error{MVSCLI_HD_NEW_INVALID_KEY};
+        // chenhao exception
+        throw hd_key_exception{MVSCLI_HD_NEW_INVALID_KEY};
     }
 
     return private_key;
 }
 
-} //namespace commands 
-} //namespace explorer 
-} //namespace libbitcoin 
+} //namespace commands
+} //namespace explorer
+} //namespace libbitcoin

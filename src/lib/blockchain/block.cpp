@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -29,7 +29,7 @@ using namespace chain;
 
 u256 block_work(u256 bits)
 {
-	return bits;
+    return bits;
 }
 
 block::indexes block_locator_indexes(size_t top_height)

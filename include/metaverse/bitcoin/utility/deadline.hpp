@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -43,7 +43,7 @@ class BC_API deadline
 public:
     typedef std::shared_ptr<deadline> ptr;
     typedef std::function<void(const code&)> handler;
-    
+
     /**
      * Construct a deadline timer.
      * @param[in]  pool      The thread pool used by the timer.

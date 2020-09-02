@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -26,7 +26,7 @@
 #include <metaverse/bitcoin/define.hpp>
 #include <metaverse/bitcoin/utility/assert.hpp>
 #include <metaverse/bitcoin/utility/log.hpp>
-
+#define RESOURCE_INSCREASE
 template <class Shared>
 std::atomic<size_t> track<Shared>::instances(0);
 
@@ -37,12 +37,13 @@ track<Shared>::track(const std::string& DEBUG_ONLY(class_name))
 #endif
 {
 #ifndef NDEBUG
-	count_ = ++instances;
-    bc::log::trace(LOG_SYSTEM)
     #ifndef RESOURCE_INSCREASE
+    count_ = ++instances;
+    bc::log::trace(LOG_SYSTEM)
         << class_ << "(" << count_ << ")";
     #else
-    	<< class_ << "(" << ++instances << ")";
+    bc::log::trace(LOG_SYSTEM)
+        << class_ << "(" << ++instances << ")";
     #endif
 #endif
 }
@@ -55,7 +56,7 @@ track<Shared>::~track()
     #ifndef RESOURCE_INSCREASE
         << "~" << class_ << "(" << count_ << ")";
     #else
-    	<< "~" << class_ << "(" << --instances << ")";
+        << "~" << class_ << "(" << --instances << ")";
     #endif
 #endif
 }

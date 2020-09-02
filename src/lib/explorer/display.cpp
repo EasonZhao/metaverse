@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -28,14 +28,11 @@
 #include <metaverse/explorer/dispatch.hpp>
 #include <metaverse/explorer/generated.hpp>
 #include <metaverse/explorer/utility.hpp>
-#include <metaverse/explorer/version.hpp>
 
 namespace libbitcoin {
 namespace explorer {
 
 using namespace bc::config;
-
-#define BX_HOME_PAGE_URL "http://mvs.live"
 
 void display_command_names(std::ostream& stream)
 {
@@ -71,7 +68,7 @@ static std::string fixup_boost_po_what_en(const std::string& what)
     return message;
 }
 
-void display_invalid_parameter(std::ostream& stream, 
+void display_invalid_parameter(std::ostream& stream,
     const std::string& message)
 {
     stream << format(BX_INVALID_PARAMETER) % fixup_boost_po_what_en(message);
@@ -79,18 +76,13 @@ void display_invalid_parameter(std::ostream& stream,
 
 void display_usage(std::ostream& stream)
 {
-    stream 
+    stream
         << std::endl << BX_COMMAND_USAGE << std::endl
-        << format(BX_VERSION_MESSAGE) % 
-            MVS_EXPLORER_VERSION << std::endl
+        << format(BX_VERSION_MESSAGE) % MVS_VERSION << std::endl
         << BX_COMMANDS_HEADER << std::endl
         << std::endl;
 
     display_command_names(stream);
-
-    stream
-        << std::endl << BX_COMMANDS_HOME_PAGE << " "
-        << BX_HOME_PAGE_URL << std::endl;
 }
 
 } // namespace explorer

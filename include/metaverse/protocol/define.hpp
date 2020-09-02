@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-protocol.
  *
@@ -23,9 +23,9 @@
 
 #include <metaverse/bitcoin.hpp>
 
-// We use the generic helper definitions in libbitcoin to define BCP_API 
+// We use the generic helper definitions in libbitcoin to define BCP_API
 // and BCP_INTERNAL. BCP_API is used for the public API symbols. It either DLL
-// imports or DLL exports (or does nothing for static build) BCP_INTERNAL is 
+// imports or DLL exports (or does nothing for static build) BCP_INTERNAL is
 // used for non-api symbols.
 
 #if defined BCP_STATIC

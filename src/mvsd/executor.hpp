@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -53,7 +53,8 @@ private:
     void do_settings();
     void do_version();
     bool do_initchain();
-	void set_admin();
+    void set_admin();
+    void set_blackhole_did();
 
     void initialize_output();
     bool verify_directory();

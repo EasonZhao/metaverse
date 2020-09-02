@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -36,7 +36,7 @@
 
 namespace libbitcoin {
 namespace wallet {
-    
+
 static BC_CONSTEXPR size_t payment_size = 1u + short_hash_size + checksum_size;
 typedef byte_array<payment_size> payment;
 
@@ -47,6 +47,7 @@ public:
     // chenhao bad modify
     static uint8_t mainnet_p2kh;
     static const uint8_t mainnet_p2sh;
+    static const std::string blackhole_address;
 
     /// Extract a payment address from an input or output script.
     /// The address will be invalid if and only if the script type is not

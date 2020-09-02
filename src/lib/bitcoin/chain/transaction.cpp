@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -24,6 +24,7 @@
 #include <sstream>
 #include <utility>
 #include <boost/iostreams/stream.hpp>
+#include <metaverse/bitcoin/math/limits.hpp>
 #include <metaverse/bitcoin/chain/input.hpp>
 #include <metaverse/bitcoin/chain/output.hpp>
 #include <metaverse/bitcoin/constants.hpp>
@@ -31,30 +32,10 @@
 #include <metaverse/bitcoin/utility/container_source.hpp>
 #include <metaverse/bitcoin/utility/istream_reader.hpp>
 #include <metaverse/bitcoin/utility/ostream_writer.hpp>
+#include <metaverse/consensus/witness.hpp>
 
 namespace libbitcoin {
 namespace chain {
-
-transaction transaction::factory_from_data(const data_chunk& data)
-{
-    transaction instance;
-    instance.from_data(data);
-    return instance;
-}
-
-transaction transaction::factory_from_data(std::istream& stream)
-{
-    transaction instance;
-    instance.from_data(stream);
-    return instance;
-}
-
-transaction transaction::factory_from_data(reader& source)
-{
-    transaction instance;
-    instance.from_data(source);
-    return instance;
-}
 
 // default constructors
 
@@ -79,7 +60,7 @@ transaction::transaction(uint32_t version, uint32_t locktime,
 }
 
 transaction::transaction(transaction&& other)
-  : transaction(other.version, other.locktime, 
+  : transaction(other.version, other.locktime,
         std::forward<input::list>(other.inputs),
         std::forward<output::list>(other.outputs))
 {
@@ -134,19 +115,7 @@ void transaction::reset()
     mutex_.unlock();
 }
 
-bool transaction::from_data(const data_chunk& data)
-{
-    data_source istream(data);
-    return from_data(istream);
-}
-
-bool transaction::from_data(std::istream& stream)
-{
-    istream_reader source(stream);
-    return from_data(source);
-}
-
-bool transaction::from_data(reader& source)
+bool transaction::from_data_t(reader& source)
 {
     reset();
     version = source.read_4_bytes_little_endian();
@@ -202,24 +171,7 @@ bool transaction::from_data(reader& source)
     return result;
 }
 
-data_chunk transaction::to_data() const
-{
-    data_chunk data;
-    data_sink ostream(data);
-    to_data(ostream);
-    ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size());
-
-    return data;
-}
-
-void transaction::to_data(std::ostream& stream) const
-{
-    ostream_writer sink(stream);
-    to_data(sink);
-}
-
-void transaction::to_data(writer& sink) const
+void transaction::to_data_t(writer& sink) const
 {
     sink.write_4_bytes_little_endian(version);
     sink.write_variable_uint_little_endian(inputs.size());
@@ -249,9 +201,10 @@ uint64_t transaction::serialized_size() const
     return tx_size;
 }
 
-#ifdef MVS_DEBUG
 std::string transaction::to_string(uint32_t flags) const
 {
+    flags = chain::get_script_context();
+
     std::ostringstream value;
     value << "Transaction:\n"
         << "\tversion = " << version << "\n"
@@ -268,7 +221,6 @@ std::string transaction::to_string(uint32_t flags) const
     value << "\n";
     return value.str();
 }
-#endif
 
 hash_digest transaction::hash() const
 {
@@ -304,24 +256,78 @@ bool transaction::is_coinbase() const
     return (inputs.size() == 1) && inputs[0].previous_output.is_null();
 }
 
-bool transaction::is_final(uint64_t block_height, uint32_t block_time) const
+bool transaction::is_pos_genesis_tx(bool is_testnet) const
 {
-    if (locktime == 0)
-        return true;
+    if (!is_coinbase() || outputs.size() != (1 + witness_cert_count)) {
+        return false;
+    }
 
-    auto max_locktime = block_time;
+    // check etp reward
+    const auto & out = outputs[0];
+    if (!out.is_etp() || out.value != pos_genesis_reward) {
+        return false;
+    }
 
-    if (locktime < locktime_threshold)
-        max_locktime = static_cast<uint32_t>(block_height);
+    chain::script script;
+    std::string foundation_address = get_foundation_address(is_testnet);
+    wallet::payment_address pay_address(foundation_address);
+    script.operations = chain::operation::to_pay_key_hash_pattern(pay_address.hash());
+    const auto expected = script.to_data(false);
 
-    if (locktime < max_locktime)
-        return true;
+    const auto actual = out.script.to_data(false);
+    if (!std::equal(expected.begin(), expected.end(), actual.begin())) {
+        return false;
+    }
 
-    for (const auto& tx_input: inputs)
-        if (!tx_input.is_final())
+    // check witness cert
+    for (uint32_t i = 0; i < witness_cert_count; ++i) {
+        const auto& out = outputs[i + 1];
+        if (!out.is_asset_cert_autoissue()) {
             return false;
+        }
+
+        const auto cert = out.get_asset_cert();
+        if (cert.get_address() != foundation_address || !cert.is_primary_witness()) {
+            return false;
+        }
+
+        const auto actual = out.script.to_data(false);
+        if (!std::equal(expected.begin(), expected.end(), actual.begin())) {
+            return false;
+        }
+    }
 
     return true;
+}
+
+bool transaction::is_coinstake() const
+{
+    return (inputs.size() > 0)
+        && (!inputs[0].previous_output.is_null())
+        && (outputs.size() >= 2)
+        && (outputs[0].is_null()) //the coin stake transaction is marked with the first output empty
+        && (inputs[0].get_script_address() == outputs[1].get_script_address());
+}
+
+bool transaction::all_inputs_final() const
+{
+    const auto finalized = [](const input& input)
+    {
+        return input.is_final();
+    };
+
+    return std::all_of(inputs.begin(), inputs.end(), finalized);
+}
+
+bool transaction::is_final(uint64_t block_height, uint32_t block_time) const
+{
+    const auto max_locktime = [=]()
+    {
+        return locktime < locktime_threshold ?
+            safe_unsigned<uint32_t>(block_height) : block_time;
+    };
+
+    return locktime == 0 || locktime < max_locktime() || all_inputs_final();
 }
 
 bool transaction::is_locktime_conflict() const
@@ -350,27 +356,108 @@ uint64_t transaction::total_output_transfer_amount() const
 {
     const auto value = [](uint64_t total, const output& output)
     {
+        // asset issue and asset transfer can not co-exist in one transaction outputs.
+        // asset secondary issue is from air, so not add its amount to pass amount check.
+        if (output.is_asset_secondaryissue()) {
+            return total;
+        }
         return total + output.get_asset_amount();
     };
     return std::accumulate(outputs.begin(), outputs.end(), uint64_t(0), value);
 }
 
-bool transaction::has_asset_issue()
+uint64_t transaction::legacy_sigops_count(bool accurate) const
 {
-	for (auto& elem: outputs) {
-		if(elem.is_asset_issue())
-			return true;
-	}
-	return false;
+    uint64_t total_sigs = 0;
+    for (const auto& input : inputs)
+    {
+        const auto& operations = input.script.operations;
+        total_sigs += operation::count_script_sigops(operations, accurate);
+    }
+
+    for (const auto& output : outputs)
+    {
+        const auto& operations = output.script.operations;
+        total_sigs += operation::count_script_sigops(operations, accurate);
+    }
+
+    return total_sigs;
 }
-bool transaction::has_asset_transfer()
+
+uint64_t transaction::legacy_sigops_count(const transaction::list& txs, bool accurate)
 {
-	for (auto& elem: outputs) {
-		if(elem.is_asset_transfer())
-			return true;
-	}
-	return false;
+    uint64_t total_sigs = 0;
+    for (const auto& tx : txs) {
+        total_sigs += tx.legacy_sigops_count(accurate);
+    }
+    return total_sigs;
 }
+
+bool transaction::has_asset_issue() const
+{
+    for (auto& elem: outputs) {
+        if(elem.is_asset_issue())
+            return true;
+    }
+    return false;
+}
+
+bool transaction::has_asset_secondary_issue() const
+{
+    for (auto& elem: outputs) {
+        if(elem.is_asset_secondaryissue())
+            return true;
+    }
+    return false;
+}
+
+
+bool transaction::has_asset_transfer() const
+{
+    for (auto& elem: outputs) {
+        if(elem.is_asset_transfer()
+            && elem.get_asset_amount()) // block #810376 has 0 asset transfer without input
+            return true;
+    }
+    return false;
+}
+
+bool transaction::has_asset_cert() const
+{
+    for (auto& elem: outputs) {
+        if(elem.is_asset_cert())
+            return true;
+    }
+    return false;
+}
+
+bool transaction::has_asset_mit_transfer() const
+{
+    for (auto& elem: outputs) {
+        if(elem.is_asset_mit_transfer())
+            return true;
+    }
+    return false;
+}
+
+bool transaction::has_did_register() const
+{
+    for (auto& elem: outputs) {
+        if(elem.is_did_register())
+            return true;
+    }
+    return false;
+}
+
+bool transaction::has_did_transfer() const
+{
+    for (auto& elem: outputs) {
+        if(elem.is_did_transfer())
+            return true;
+    }
+    return false;
+}
+
 
 } // namspace chain
 } // namspace libbitcoin

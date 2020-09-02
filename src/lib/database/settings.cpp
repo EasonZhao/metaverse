@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -42,14 +42,14 @@ settings::settings(bc::settings context)
         case bc::settings::mainnet:
         {
             stealth_start_height = 350000;
-            directory = { "mainnet" };
+            directory = default_directory = { "mainnet" };
             break;
         }
 
         case bc::settings::testnet:
         {
             stealth_start_height = 500000;
-            directory = { "testnet" };
+            directory = default_directory = { "testnet" };
             break;
         }
 

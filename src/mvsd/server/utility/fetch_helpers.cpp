@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -110,12 +110,12 @@ bool unwrap_fetch_transaction_args(hash_digest& hash,
 void chain_transaction_fetched(const code& ec, const chain::transaction& tx,
     const message& request, send_handler handler)
 {
-	// wdy add for tx is null reference
-	if((code)error::not_found == ec) {
-    	handler(message(request, error::not_found));
-		return;
-	}
-	
+    // wdy add for tx is null reference
+    if (error::not_found == ec.value()) {
+        handler(message(request, error::not_found));
+        return;
+    }
+
     const auto result = build_chunk(
     {
         message::to_bytes(ec),

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -19,6 +19,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <metaverse/network/sessions/session_seed.hpp>
+#include <metaverse/macros_define.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -40,7 +41,7 @@ using namespace std::placeholders;
 session_seed::session_seed(p2p& network)
   : session(network, true, false),
     CONSTRUCT_TRACK(session_seed),
-	network_{network}
+    network_{network}
 {
 }
 
@@ -60,6 +61,11 @@ void session_seed::start(result_handler handler)
     session::start(CONCURRENT2(handle_started, _1, handler));
 }
 
+void session_seed::restart(result_handler handler)
+{
+    handle_started(error::success, handler);
+}
+
 void session_seed::handle_started(const code& ec, result_handler handler)
 {
     if (ec)
@@ -73,10 +79,10 @@ void session_seed::handle_started(const code& ec, result_handler handler)
 
 void session_seed::handle_count(size_t start_size, result_handler handler)
 {
-    if (start_size != 0)
+    if (start_size != 0 && settings_.seeds.empty())
     {
         log::debug(LOG_NETWORK)
-            << "Seeding is not required because there are " 
+            << "Seeding is not required because there are "
             << start_size << " cached addresses.";
         handler(error::success);
         return;
@@ -89,7 +95,12 @@ void session_seed::handle_count(size_t start_size, result_handler handler)
         handler(error::operation_failed);
         return;
     }
-    
+
+    log::debug(LOG_NETWORK)
+        << "Start seeding, there are "
+        << start_size << " cached addresses.";
+
+    start_size = 0;
     // This is NOT technically the end of the start sequence, since the handler
     // is not invoked until seeding operations are complete.
     start_seeding(start_size, create_connector(), handler);
@@ -123,14 +134,13 @@ void session_seed::start_seed(const config::endpoint& seed,
         return;
     }
 
-    log::info(LOG_NETWORK)
-        << "Contacting seed [" << seed << "]";
-
     // OUTBOUND CONNECT
-    connect->connect(seed, BIND4(handle_connect, _1, _2, seed, handler), [this](const asio::endpoint& endpoint){
-    	network_.store(config::authority{endpoint}.to_network_address(), [](const code& ec){});
-    	log::debug(LOG_NETWORK) << "session seed store," << endpoint ;
-    });
+    auto resolve_handler = [this](const asio::endpoint& endpoint){
+        network_.store_seed(config::authority{endpoint}.to_network_address(), [](const code& ec){});
+        network_.store(config::authority{endpoint}.to_network_address(), [](const code& ec){});
+        log::debug(LOG_NETWORK) << "session seed store," << endpoint ;
+    };
+    connect->connect(seed, BIND4(handle_connect, _1, _2, seed, handler), resolve_handler);
 }
 
 void session_seed::handle_connect(const code& ec, channel::ptr channel,
@@ -138,13 +148,11 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        log::info(LOG_NETWORK)
-            << "Failure contacting seed [" << seed << "] " << ec.message();
         handler(ec);
         return;
     }
 
-    if (blacklisted(channel->authority()))
+    if (channel && blacklisted(channel->authority()))
     {
         log::debug(LOG_NETWORK)
             << "Seed [" << seed << "] on blacklisted address ["
@@ -153,10 +161,7 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
-    log::info(LOG_NETWORK)
-        << "Connected seed [" << seed << "] as " << channel->authority();
-
-    register_channel(channel, 
+    register_channel(channel,
         BIND3(handle_channel_start, _1, channel, handler),
         BIND1(handle_channel_stop, _1));
 }
@@ -176,14 +181,12 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
 void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler)
 {
-    attach<protocol_ping>(channel)->start([](const code&){});
+    attach<protocol_ping>(channel)->start();
     attach<protocol_seed>(channel)->start(handler);
 }
 
 void session_seed::handle_channel_stop(const code& ec)
 {
-    log::debug(LOG_NETWORK)
-        << "Seed channel stopped: " << ec.message();
 }
 
 // This accepts no error code because individual seed errors are suppressed.

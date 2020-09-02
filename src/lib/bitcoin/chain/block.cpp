@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -19,6 +19,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <metaverse/bitcoin/chain/block.hpp>
+#include <metaverse/macros_define.hpp>
 
 #include <utility>
 #include <boost/iostreams/stream.hpp>
@@ -29,58 +30,44 @@
 #include <metaverse/bitcoin/utility/container_source.hpp>
 #include <metaverse/bitcoin/utility/istream_reader.hpp>
 #include <metaverse/bitcoin/utility/ostream_writer.hpp>
+#include <metaverse/consensus/witness.hpp>
 
 namespace libbitcoin {
 namespace chain {
 
-block block::factory_from_data(const data_chunk& data,
-    bool with_transaction_count)
-{
-    block instance;
-    instance.from_data(data, with_transaction_count);
-    return instance;
-}
-
-block block::factory_from_data(std::istream& stream,
-    bool with_transaction_count)
-{
-    block instance;
-    instance.from_data(stream, with_transaction_count);
-    return instance;
-}
-
-block block::factory_from_data(reader& source,
-    bool with_transaction_count)
-{
-    block instance;
-    instance.from_data(source, with_transaction_count);
-    return instance;
-}
 
 block::block()
+  : header{}
 {
 }
 
 block::block(const block& other)
-  : block(other.header, other.transactions)
+  : block(other.header, other.transactions, other.blocksig, other.public_key)
 {
 }
 
 block::block(const chain::header& header,
-    const chain::transaction::list& transactions)
-  : header(header), transactions(transactions)
+    const chain::transaction::list& transactions,
+    const ec_signature& blocksig,
+    const ec_compressed& pubkey)
+  : header(header), transactions(transactions), blocksig(blocksig), public_key(pubkey)
 {
 }
 
 block::block(block&& other)
   : block(std::forward<chain::header>(other.header),
-        std::forward<chain::transaction::list>(other.transactions))
+        std::forward<chain::transaction::list>(other.transactions),
+        std::forward<ec_signature>(other.blocksig),
+        std::forward<ec_compressed>(other.public_key))
 {
 }
 
-block::block(chain::header&& header, chain::transaction::list&& transactions)
+block::block(chain::header&& header, chain::transaction::list&& transactions,
+    ec_signature&& blocksig, ec_compressed&& pubkey)
   : header(std::forward<chain::header>(header)),
-    transactions(std::forward<chain::transaction::list>(transactions))
+    transactions(std::forward<chain::transaction::list>(transactions)),
+    blocksig(std::forward<ec_signature>(blocksig)),
+    public_key(std::forward<ec_compressed>(pubkey))
 {
 }
 
@@ -88,6 +75,8 @@ block& block::operator=(block&& other)
 {
     header = std::move(other.header);
     transactions = std::move(other.transactions);
+    blocksig = std::move(other.blocksig);
+    public_key = std::move(other.public_key);
     return *this;
 }
 
@@ -101,21 +90,26 @@ void block::reset()
     header.reset();
     transactions.clear();
     transactions.shrink_to_fit();
+    blocksig.fill(0);
+    public_key.fill(0);
 }
 
-bool block::from_data(const data_chunk& data, bool with_transaction_count)
+bool block::is_proof_of_stake() const
 {
-    data_source istream(data);
-    return from_data(istream, with_transaction_count);
+    return header.is_proof_of_stake();
 }
 
-bool block::from_data(std::istream& stream, bool with_transaction_count)
+bool block::is_proof_of_work() const
 {
-    istream_reader source(stream);
-    return from_data(source, with_transaction_count);
+    return header.is_proof_of_work();
 }
 
-bool block::from_data(reader& source, bool with_transaction_count)
+bool block::is_proof_of_dpos() const
+{
+    return header.is_proof_of_dpos();
+}
+
+bool block::from_data_t(reader& source, bool with_transaction_count)
 {
     reset();
 
@@ -134,34 +128,40 @@ bool block::from_data(reader& source, bool with_transaction_count)
         }
     }
 
+    if (result)
+    {
+        if (is_proof_of_stake() || is_proof_of_dpos()) {
+            source.read_data(blocksig.data(), blocksig.size());
+            result = static_cast<bool>(source);
+        }
+
+        if (result && is_proof_of_dpos()) {
+            source.read_data(public_key.data(), public_key.size());
+            result = static_cast<bool>(source);
+        }
+    }
+
     if (!result)
         reset();
 
     return result;
 }
 
-data_chunk block::to_data(bool with_transaction_count) const
-{
-    data_chunk data;
-    data_sink ostream(data);
-    to_data(ostream, with_transaction_count);
-    ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(with_transaction_count));
-    return data;
-}
 
-void block::to_data(std::ostream& stream, bool with_transaction_count) const
-{
-    ostream_writer sink(stream);
-    to_data(sink, with_transaction_count);
-}
-
-void block::to_data(writer& sink, bool with_transaction_count) const
+void block::to_data_t(writer& sink, bool with_transaction_count) const
 {
     header.to_data(sink, with_transaction_count);
 
     for (const auto& tx: transactions)
         tx.to_data(sink);
+
+    if (is_proof_of_stake() || is_proof_of_dpos()) {
+        sink.write_data(blocksig.data(), blocksig.size());
+    }
+
+    if (is_proof_of_dpos()) {
+        sink.write_data(public_key.data(), public_key.size());
+    }
 }
 
 uint64_t block::serialized_size(bool with_transaction_count) const
@@ -170,6 +170,14 @@ uint64_t block::serialized_size(bool with_transaction_count) const
 
     for (const auto& tx: transactions)
         block_size += tx.serialized_size();
+
+    if (is_proof_of_stake() || is_proof_of_dpos()) {
+        block_size += blocksig.size();
+    }
+
+    if (is_proof_of_dpos()) {
+        block_size += public_key.size();
+    }
 
     return block_size;
 }

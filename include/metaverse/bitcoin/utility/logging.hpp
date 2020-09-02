@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -29,8 +29,8 @@
 namespace libbitcoin {
 
 /// Set up global logging.
-BCT_API void initialize_logging(std::ofstream& debug, std::ofstream& error,
-    std::ostream& output_stream, std::ostream& error_stream);
+BCT_API void initialize_logging(bc::ofstream& debug, bc::ofstream& error,
+    std::ostream& output_stream, std::ostream& error_stream, std::string level = "DEBUG");
 
 /// Class Logger
 class Logger{
@@ -42,14 +42,14 @@ public:
         initialize_logging(debug_log_, error_log_, std::cout, std::cerr);
     }
 
-	self(const self&) = delete;
-	self(const self&&) = delete;
+    self(const self&) = delete;
+    self(const self&&) = delete;
 
     ~self() noexcept
     {
         log::clear();
-		debug_log_.close();
-		error_log_.close();
+        debug_log_.close();
+        error_log_.close();
     }
 
 public:
@@ -58,8 +58,8 @@ static BC_CONSTEXPR std::ofstream::openmode log_open_mode =
     std::ofstream::out | std::ofstream::app;
 
 private:
-    std::ofstream debug_log_{"debug.log", log_open_mode};
-    std::ofstream error_log_{"error.log", log_open_mode};
+    bc::ofstream debug_log_{"debug.log", log_open_mode};
+    bc::ofstream error_log_{"error.log", log_open_mode};
 
 #undef self
 };// class Logger

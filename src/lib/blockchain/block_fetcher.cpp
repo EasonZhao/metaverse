@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -57,21 +57,54 @@ public:
 
 private:
     void handle_fetch_header(const code& ec, const header& header,
-        block::ptr block, block_chain::block_fetch_handler handler)
-    {
-        if (ec)
-        {
+        block::ptr block, block_chain::block_fetch_handler handler) {
+        if (ec) {
             handler(ec, nullptr);
             return;
         }
 
         // Set the block header.
         block->header = header;
-        const auto hash = header.hash();
+
+        const auto& hash = block->header.hash();
+
+        if (block->header.is_proof_of_stake() || block->header.is_proof_of_dpos()) {
+            blockchain_.fetch_block_signature(hash,
+                                              std::bind(&block_fetcher::handle_fetch_signature,
+                                                        shared_from_this(), _1, _2, block, handler));
+        }
+
+        if (block->header.is_proof_of_dpos()) {
+            blockchain_.fetch_block_public_key(hash,
+                                              std::bind(&block_fetcher::handle_fetch_public_key,
+                                                        shared_from_this(), _1, _2, block, handler));
+        }
 
         blockchain_.fetch_block_transaction_hashes(hash,
-            std::bind(&block_fetcher::fetch_transactions,
-                shared_from_this(), _1, _2, block, handler));
+                                                   std::bind(&block_fetcher::fetch_transactions,
+                                                             shared_from_this(), _1, _2, block, handler));
+    }
+
+    void handle_fetch_signature(const code& ec, const ec_signature& sig,
+                             block::ptr block, block_chain::block_fetch_handler handler){
+
+        if (ec) {
+            handler(ec, nullptr);
+            return;
+        }
+
+        block->blocksig = sig;
+    }
+
+    void handle_fetch_public_key(const code& ec, const ec_compressed& pubkey,
+                             block::ptr block, block_chain::block_fetch_handler handler){
+
+        if (ec) {
+            handler(ec, nullptr);
+            return;
+        }
+
+        block->public_key = pubkey;
     }
 
     void fetch_transactions(const code& ec, const hash_list& hashes,

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -53,7 +53,7 @@ const file_offset block_database::empty = 0;
 
 block_database::block_database(const path& map_filename,
     const path& index_filename, std::shared_ptr<shared_mutex> mutex)
-  : lookup_file_(map_filename, mutex), 
+  : lookup_file_(map_filename, mutex),
     lookup_header_(lookup_file_, number_buckets),
     lookup_manager_(lookup_file_, header_size),
     lookup_map_(lookup_header_, lookup_manager_),
@@ -104,7 +104,7 @@ bool block_database::start()
     return
         lookup_file_.start() &&
         index_file_.start() &&
-        lookup_header_.start() && 
+        lookup_header_.start() &&
         lookup_manager_.start() &&
         index_manager_.start();
 }
@@ -168,10 +168,24 @@ void block_database::store(const block& block, size_t height)
 
         for (const auto& tx: block.transactions)
             serial.write_hash(tx.hash());
+
+        if (block.header.is_proof_of_stake()){
+            serial.write_data(block.blocksig);
+        }
+        else if (block.header.is_proof_of_dpos()) {
+            serial.write_data(block.blocksig);
+            serial.write_data(block.public_key);
+        }
     };
 
     const auto key = block.header.hash();
-    const auto value_size = 148 + 4 + 4 + tx_count * hash_size;
+    auto value_size = 148 + 4 + 4 + tx_count * hash_size;
+    if (block.header.is_proof_of_stake()){
+        value_size += ec_signature_size;
+    }
+    else if (block.header.is_proof_of_dpos()) {
+        value_size += ec_signature_size + ec_compressed_size;
+    }
 
     // Write block header, height, tx count and hashes to hash table.
     const auto position = lookup_map_.store(key, write, value_size);
@@ -200,7 +214,7 @@ void block_database::sync()
 // This is necessary for parallel import, as gaps are created.
 void block_database::zeroize(array_index first, array_index count)
 {
-    for (array_index index = first; index < (first + count); ++index)
+    for (auto index = first; index < (first + count); ++index)
     {
         const auto memory = index_manager_.get(index);
         auto serial = make_serializer(REMAP_ADDRESS(memory));

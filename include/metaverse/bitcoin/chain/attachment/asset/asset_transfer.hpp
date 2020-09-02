@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -23,53 +23,86 @@
 #include <cstdint>
 #include <istream>
 #include <vector>
+#include <tuple>
 #include <metaverse/bitcoin/chain/point.hpp>
 #include <metaverse/bitcoin/chain/script/script.hpp>
 #include <metaverse/bitcoin/define.hpp>
 #include <metaverse/bitcoin/utility/reader.hpp>
 #include <metaverse/bitcoin/utility/writer.hpp>
-#include <metaverse/bitcoin/chain/history.hpp>
+#include <metaverse/bitcoin/base_primary.hpp>
 
 namespace libbitcoin {
 namespace chain {
 
-BC_CONSTEXPR size_t ASSET_TRANSFER_ADDRESS_FIX_SIZE = 64;
+BC_CONSTEXPR size_t ASSET_TRANSFER_SYMBOL_FIX_SIZE = 64;
 BC_CONSTEXPR size_t ASSET_TRANSFER_QUANTITY_FIX_SIZE = 8;
 
-BC_CONSTEXPR size_t ASSET_TRANSFER_FIX_SIZE = ASSET_TRANSFER_ADDRESS_FIX_SIZE + ASSET_TRANSFER_QUANTITY_FIX_SIZE;
+BC_CONSTEXPR size_t ASSET_TRANSFER_FIX_SIZE = ASSET_TRANSFER_SYMBOL_FIX_SIZE + ASSET_TRANSFER_QUANTITY_FIX_SIZE;
+
+struct asset_balances {
+    typedef std::vector<asset_balances> list;
+    std::string symbol;
+    std::string address;
+    uint64_t unspent_asset;
+    uint64_t locked_asset;
+
+    // for sort
+    bool operator< (const asset_balances& other) const;
+};
+
+struct asset_deposited_balance {
+    asset_deposited_balance(const std::string& symbol_,
+        const std::string& address_,
+        const std::string& tx_hash_,
+        uint64_t tx_height_)
+        : symbol(symbol_)
+        , address(address_)
+        , tx_hash(tx_hash_)
+        , tx_height(tx_height_)
+        , unspent_asset(0)
+        , locked_asset(0)
+    {}
+
+    std::string symbol;
+    std::string address;
+    std::string tx_hash;
+    std::string model_param;
+    uint64_t tx_height;
+    uint64_t unspent_asset;
+    uint64_t locked_asset;
+
+    // for sort
+    bool operator< (const asset_deposited_balance& other) const {
+        typedef std::tuple<std::string, uint64_t> cmp_tuple;
+        return cmp_tuple(symbol, tx_height) < cmp_tuple(other.symbol, other.tx_height);
+    }
+
+    typedef std::vector<asset_deposited_balance> list;
+};
 
 class BC_API asset_transfer
+    : public base_primary<asset_transfer>
 {
 public:
-	asset_transfer();
-	asset_transfer(const std::string& address, uint64_t quantity);
-    static asset_transfer factory_from_data(const data_chunk& data);
-    static asset_transfer factory_from_data(std::istream& stream);
-    static asset_transfer factory_from_data(reader& source);
+    asset_transfer();
+    asset_transfer(const std::string& symbol, uint64_t quantity);
     static uint64_t satoshi_fixed_size();
 
-    bool from_data(const data_chunk& data);
-    bool from_data(std::istream& stream);
-    bool from_data(reader& source);
-    data_chunk to_data() const;
-    void to_data(std::ostream& stream) const;
-    void to_data(writer& sink) const;
+    bool from_data_t(reader& source);
+    void to_data_t(writer& sink) const;
 
-#ifdef MVS_DEBUG
     std::string to_string() const;
-	void to_json(std::ostream& output) ;
-#endif
 
     bool is_valid() const;
     void reset();
     uint64_t serialized_size() const;
-	const std::string& get_address() const;
-	void set_address(const std::string& address);
-	uint64_t get_quantity() const;
-	void set_quantity(uint64_t quantity);
-	
+    const std::string& get_symbol() const;
+    void set_symbol(const std::string& symbol);
+    uint64_t get_quantity() const;
+    void set_quantity(uint64_t quantity);
+
 private:
-    std::string address;  // symbol  -- in block
+    std::string symbol;  // symbol  -- in block
     uint64_t quantity;  // -- in block
 };
 

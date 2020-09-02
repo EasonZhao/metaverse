@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -32,6 +32,29 @@ size_t variable_uint_size(uint64_t value)
         return 5;
     else
         return 9;
+}
+
+size_t variable_string_size(const std::string& str)
+{
+    size_t length = str.size();
+    length += variable_uint_size(length);
+    return length;
+}
+
+size_t variable_data_chunk_size(const data_chunk& data)
+{
+    const size_t length = data.size();
+    return length + variable_uint_size(length);
+}
+
+
+    std::string limit_size_string(const std::string& str, size_t limit_size)
+{
+    if (str.size() > limit_size) {
+        return str.substr(0, limit_size);
+    }
+
+    return str;
 }
 
 } // namespace libbitcoin

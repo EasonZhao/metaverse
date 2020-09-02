@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -57,7 +57,7 @@ public:
 
     /// Lookup a key, returning an iterable result with multiple values.
     array_index lookup(const KeyType& key) const;
-
+    std::shared_ptr<std::vector<array_index>> lookup(array_index index) const;
     /// Add a new row for a key. If the key doesn't exist, it will be created.
     /// If it does exist, the value will be added at the start of the chain.
     void add_row(const KeyType& key, write_function write);

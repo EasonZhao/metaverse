@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -105,6 +105,8 @@ block_message& block_message::operator=(block_message&& other)
 {
     header = std::move(other.header);
     transactions = std::move(other.transactions);
+    blocksig = std::move(other.blocksig);
+    public_key = std::move(other.public_key);
     originator_ = other.originator_;
     return *this;
 }

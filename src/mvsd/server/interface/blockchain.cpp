@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -160,7 +160,7 @@ void blockchain::block_header_fetched(const code& ec,
     const auto result = build_chunk(
     {
         message::to_bytes(ec),
-        block.to_data(false)
+        block.to_data()
     });
 
     handler(message(request, result));

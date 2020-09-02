@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -61,6 +61,11 @@ void protocol::set_peer_version(message::version::ptr value)
     channel_->set_version(value);
 }
 
+uint32_t protocol::peer_start_height()
+{
+    return channel_->peer_start_height();
+}
+
 threadpool& protocol::pool()
 {
     return pool_;
@@ -74,7 +79,7 @@ void protocol::stop(const code& ec)
 
 bool protocol::misbehaving(int32_t howmuch)
 {
-	return channel_->misbehaving(howmuch);
+    return channel_->misbehaving(howmuch);
 }
 
 } // namespace network

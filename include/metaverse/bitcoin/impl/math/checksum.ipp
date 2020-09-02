@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -64,7 +64,7 @@ template <size_t Size>
 bool unwrap(uint8_t& out_version,
     std::array<uint8_t, UNWRAP_SIZE(Size)>& out_payload,
     uint32_t& out_checksum, const std::array<uint8_t, Size>& wrapped)
-{      
+{
     if (!verify_checksum(wrapped))
         return false;
 

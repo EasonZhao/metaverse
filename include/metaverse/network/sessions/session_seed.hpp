@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -47,6 +47,8 @@ public:
 
     /// Start the session.
     void start(result_handler handler) override;
+
+    void restart(result_handler handler);
 
 protected:
     /// Override to attach specialized protocols upon channel start.

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -25,10 +25,9 @@
 
 namespace libbitcoin
 {
-	boost::filesystem::path default_data_path();
+    const boost::filesystem::path& default_data_path();
 
-	boost::filesystem::path webpage_path();
-
+    boost::filesystem::path webpage_path();
 }//namespace libbitcoin
 
 

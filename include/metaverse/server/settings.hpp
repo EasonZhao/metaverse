@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -45,13 +45,17 @@ public:
     uint32_t subscription_expiration_minutes;
     uint32_t subscription_limit;
     std::string mongoose_listen;
-    bool log_requests{true}; //FIXME.chenhao
+    std::string websocket_listen;
+    std::string log_level;
+    std::string rpc_version;
+    bool administrator_required;
     bool secure_only;
 
     bool query_service_enabled;
     bool heartbeat_service_enabled;
     bool block_service_enabled;
     bool transaction_service_enabled;
+    bool websocket_service_enabled;
 
     config::endpoint public_query_endpoint;
     config::endpoint public_heartbeat_endpoint;
@@ -66,6 +70,10 @@ public:
     config::sodium server_private_key;
     config::sodium::list client_public_keys;
     config::authority::list client_addresses;
+
+    std::vector<std::string> rpc_client_addresses;
+    std::vector<std::string> allow_rpc_methods;
+    std::vector<std::string> forbid_rpc_methods;
 
     /// Helpers.
     asio::duration heartbeat_interval() const;

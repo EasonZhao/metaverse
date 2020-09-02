@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -33,7 +33,7 @@ namespace explorer {
 namespace config {
 
 /**
- * Serialization helper to convert between serialized and deserialized satoshi 
+ * Serialization helper to convert between serialized and deserialized satoshi
  * header.
  */
 class BCX_API header
@@ -75,7 +75,7 @@ public:
      * @param[out]  argument  The object to receive the read value.
      * @return                The input stream reference.
      */
-    friend std::istream& operator>>(std::istream& input, 
+    friend std::istream& operator>>(std::istream& input,
         header& argument);
 
     /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -60,7 +60,7 @@ protected:
     virtual bool unbind(socket& xpub, socket& xsub);
 
     // Implement the service.
-    virtual void work();
+    virtual void work() override;
 
 private:
     typedef bc::message::block_message::ptr block_ptr;

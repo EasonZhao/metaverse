@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -41,6 +41,8 @@ public:
     /// This class is not copyable.
     socket(const socket&) = delete;
     void operator=(const socket&) = delete;
+
+    virtual ~socket() {}
 
     /// Obtain an exclusive reference to the socket.
     locked_socket::ptr get_socket();

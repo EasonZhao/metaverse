@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -30,6 +30,7 @@ namespace libbitcoin {
 
 BC_CONSTEXPR size_t max_script_number_size = 4;
 BC_CONSTEXPR size_t cltv_max_script_number_size = 5;
+BC_CONSTEXPR size_t csv_max_script_number_size = 5;
 
 /**
  * Numeric opcodes (OP_1ADD, etc) are restricted to operating on

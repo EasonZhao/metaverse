@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-node.
  *
@@ -38,13 +38,14 @@ namespace node {
 #define BN_SETTINGS_VARIABLE "settings"
 #define BN_VERSION_VARIABLE "version"
 #define BN_DAEMON_VARIABLE "daemon"
+//#define BS_UI_VARIABLE "ui"
 
 // This must be lower case but the env var part can be any case.
 #define BN_CONFIG_VARIABLE "config"
 
 // This must match the case of the env var.
 #define BN_ENVIRONMENT_VARIABLE_PREFIX "BN_"
-    
+
 /// Full node configuration, thread safe.
 class BCN_API configuration
 {
@@ -59,9 +60,12 @@ public:
     bool version;
     bool daemon;
     bool use_testnet_rules;
+    bool ui;
+    bool upnp_map_port;
 
     /// Options and environment vars.
     boost::filesystem::path file;
+    boost::filesystem::path data_dir;
 
     /// Settings.
     node::settings node;

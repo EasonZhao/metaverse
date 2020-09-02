@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -50,7 +50,7 @@ public:
         uint32_t block_timeout_seconds);
 
     /// Ensure there are no remaining reserved hashes.
-    ~reservation();
+    virtual ~reservation();
 
     /// The sequential identifier of this reservation.
     size_t slot() const;

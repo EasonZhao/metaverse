@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse-protocol.
  *
  * metaverse-protocol is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License with
  * additional permissions to the one published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) 
+ * Foundation, either version 3 of the License, or (at your option)
  * any later version. For more information see LICENSE.
  *
  * This program is distributed in the hope that it will be useful,
@@ -66,7 +66,8 @@ void poller::clear()
 identifiers poller::wait()
 {
     // This is the maximum safe value on all platforms, due to zeromq bug.
-    static constexpr int32_t maximum_safe_wait_milliseconds = 1000;
+    //static constexpr int32_t maximum_safe_wait_milliseconds = 1000;
+    static constexpr int32_t maximum_safe_wait_milliseconds = -1;
 
     return wait(maximum_safe_wait_milliseconds);
 }

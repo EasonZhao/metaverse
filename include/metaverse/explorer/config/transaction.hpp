@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -34,7 +34,7 @@ namespace explorer {
 namespace config {
 
 /**
- * Serialization helper to convert between serialized and deserialized satoshi 
+ * Serialization helper to convert between serialized and deserialized satoshi
  * transaction.
  */
 class BCX_API transaction
@@ -63,6 +63,7 @@ public:
      * @param[in]  other  The object to copy into self on construct.
      */
     transaction(const transaction& other);
+    transaction& operator=(const transaction& other) = default;
 
     /**
      * Return a reference to the data member.

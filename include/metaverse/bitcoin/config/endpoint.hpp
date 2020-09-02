@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -42,22 +42,23 @@ class BC_API endpoint
 public:
     /**
      * A list of endpoints.
-     * This must provide operator<< for ostream in order to be used as a 
+     * This must provide operator<< for ostream in order to be used as a
      * boost::program_options default_value.
      */
     typedef std::vector<endpoint> list;
-    
+
     /**
      * Default constructor.
      */
     endpoint();
-    
+
     /**
      * Copy constructor.
      * @param[in]  other  The object to copy into self on construct.
      */
     endpoint(const endpoint& other);
-    
+    endpoint& operator=(const endpoint& other) = default;
+
     /**
      * Initialization constructor.
      * The scheme and port may be undefined, in which case the port is reported
@@ -65,26 +66,26 @@ public:
      * @param[in]  value  The initial value of the [scheme://]host[:port] form.
      */
     endpoint(const std::string& value);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  authority  The value to initialize with.
      */
     endpoint(const authority& authority);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  host  The host name or ip address to initialize with.
      * @param[in]  port  The port to initialize with.
      */
     endpoint(const std::string& host, uint16_t port);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  endpoint  The endpoint addresss to initialize with.
      */
     endpoint(const asio::endpoint& host);
-    
+
     /**
      * Initialization constructor.
      * @param[in]  ip    The boost ip addresss to initialize with.
@@ -103,19 +104,19 @@ public:
      * @return The scheme of the endpoint or empty string.
      */
     const std::string& scheme() const;
-    
+
     /**
      * Getter.
      * @return The host name or ip address of the endpoint.
      */
     const std::string& host() const;
-    
+
     /**
      * Getter.
      * @return The tcp port of the endpoint.
      */
     uint16_t port() const;
-    
+
     /**
      * Get the endpoint as a string.
      * An empty scheme and/or empty port is omitted.
@@ -128,7 +129,7 @@ public:
      * @param[in]  other  The other object with which to compare.
      */
     bool operator==(const endpoint& other) const;
-    
+
     /**
      * Define stream in. Throws if input is invalid.
      * @param[in]   input     The input stream to read the value from.

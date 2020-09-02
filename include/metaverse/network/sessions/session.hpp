@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -98,7 +98,7 @@ protected:
     session(p2p& network, bool outgoing, bool persistent);
 
     /// Validate session stopped.
-    ~session();
+    virtual ~session();
 
     /// This class is not copyable.
     session(const session&) = delete;
@@ -138,11 +138,15 @@ protected:
     /// Properties.
     virtual void address_count(count_handler handler);
     virtual void fetch_address(host_handler handler);
+    virtual void fetch_seed_address(host_handler handler);
     virtual void connection_count(count_handler handler);
     virtual bool blacklisted(const authority& authority) const;
     virtual bool stopped() const;
+    virtual bool stopped(const code& ec) const;
 
     void remove(const message::network_address& address, result_handler handler);
+
+    void store(const message::network_address& address);
 
     /// Socket creators.
     virtual acceptor::ptr create_acceptor();

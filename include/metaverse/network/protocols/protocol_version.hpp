@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -47,7 +47,7 @@ public:
      * @param[in]  channel   The channel on which to start the protocol.
      */
     protocol_version(p2p& network, channel::ptr channel);
-    
+
     /**
      * Start the protocol.
      * @param[in]  handler  Invoked upon stop or receipt of version and verack.
@@ -55,6 +55,7 @@ public:
     virtual void start(event_handler handler);
 
 protected:
+    void handle_complete(const code& ec);
     /// Override to vary the version message.
     virtual void send_version(const message::version& self);
 
@@ -70,6 +71,7 @@ private:
     bool handle_receive_verack(const code& ec, message::verack::ptr);
 
     p2p& network_;
+    std::function<void(const code& ec)> complete_handler_;
 };
 
 } // namespace network

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -132,7 +132,7 @@ void heartbeat_service::publish(uint32_t count, zmq::socket& publisher)
     message.enqueue_little_endian(count);
     auto ec = publisher.send(message);
 
-    if (ec == (code)error::service_stopped)
+    if (ec.value() == error::service_stopped)
         return;
 
     if (ec)
@@ -144,9 +144,8 @@ void heartbeat_service::publish(uint32_t count, zmq::socket& publisher)
     }
 
     // This isn't actually a request, should probably update settings.
-    if (settings_.log_requests)
-        log::debug(LOG_SERVER)
-            << "Published " << security << " heartbeat [" << count << "].";
+    log::debug(LOG_SERVER)
+        << "Published " << security << " heartbeat [" << count << "].";
 }
 
 } // namespace server

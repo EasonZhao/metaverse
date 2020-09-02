@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-consensus.
  *
@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace consensus {
 
 /**
- * Result values from calling verify_script. 
+ * Result values from calling verify_script.
  */
 typedef enum verify_result_type
 {
@@ -87,7 +87,7 @@ typedef enum verify_result_type
 } verify_result;
 
 /**
- * Flags to use when calling verify_script. 
+ * Flags to use when calling verify_script.
  */
 typedef enum verify_flags_type
 {
@@ -103,8 +103,8 @@ typedef enum verify_flags_type
 
     /**
      * Passing a non-strict-DER signature or one with undefined hashtype to a
-     * checksig operation causes script failure. Evaluating a pubkey that is 
-     * not (0x04 + 64 bytes) or (0x02 or 0x03 + 32 bytes) by checksig causes 
+     * checksig operation causes script failure. Evaluating a pubkey that is
+     * not (0x04 + 64 bytes) or (0x02 or 0x03 + 32 bytes) by checksig causes
      * script failure. (softfork safe, but not used or intended as a consensus
      * rule).
      */
@@ -169,7 +169,17 @@ typedef enum verify_flags_type
     /**
      * Verify CHECKLOCKTIMEVERIFY, see BIP65 for details.
      */
-    verify_flags_checklocktimeverify = (1U << 9)
+    verify_flags_checklocktimeverify = (1U << 9),
+
+    /**
+     * Verify CHECKATTENUATIONVERIFY
+     */
+    verify_flags_checkattenuationverify = (1U << 10),
+
+    /**
+     * Verify CHECKSEQUENCEVERIFY
+     */
+    verify_flags_checksequenceverify = (1U << 11)
 } verify_flags;
 
 /**
@@ -179,14 +189,14 @@ typedef enum verify_flags_type
  * @param[in]  transaction_size    The byte length of the transaction.
  * @param[in]  prevout_script      The script public key to verify against.
  * @param[in]  prevout_script_size The byte length of the script public key.
- * @param[in]  tx_input_index      The zero-based index of the transaction 
+ * @param[in]  tx_input_index      The zero-based index of the transaction
  *                                 input with signature to be verified.
  * @param[in]  flags               Verification constraint flags.
  * @returns                        A script verification result code.
  */
  BCK_API verify_result_type verify_script(const unsigned char* transaction,
     size_t transaction_size, const unsigned char* prevout_script,
-    size_t prevout_script_size, unsigned int tx_input_index, 
+    size_t prevout_script_size, unsigned int tx_input_index,
     unsigned int flags);
 
 } // namespace consensus

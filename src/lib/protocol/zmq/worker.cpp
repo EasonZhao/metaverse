@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse-protocol.
  *
  * metaverse-protocol is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License with
  * additional permissions to the one published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) 
+ * Foundation, either version 3 of the License, or (at your option)
  * any later version. For more information see LICENSE.
  *
  * This program is distributed in the hope that it will be useful,
@@ -100,6 +100,13 @@ bool worker::stop()
 bool worker::stopped()
 {
     return stopped_;
+}
+
+bool worker::stopped(const code& ec)
+{
+    return stopped() ||
+        ec.value() == error::service_stopped ||
+        ec.value() == error::channel_stopped;
 }
 
 // Call from work when started (connected/bound) or failed to do so.

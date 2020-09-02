@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -28,11 +28,9 @@
 #include <metaverse/database/result/base_result.hpp>
 #include <metaverse/bitcoin/chain/attachment/asset/asset_detail.hpp>
 
-using namespace libbitcoin::chain;
-
 namespace libbitcoin {
 namespace database {
-    
+
 /// read asset detail information from asset database.
 class BCD_API asset_result : public base_result
 {
@@ -40,7 +38,7 @@ public:
     asset_result(const memory_ptr slab);
 
     /// The asset.
-	std::shared_ptr<asset_detail> get_asset_detail() const;
+    std::shared_ptr<chain::asset_detail> get_asset_detail() const;
 };
 
 } // namespace database

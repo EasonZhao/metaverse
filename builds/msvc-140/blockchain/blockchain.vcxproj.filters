@@ -31,6 +31,9 @@
     <ClInclude Include="..\..\..\include\metaverse\blockchain\orphan_pool.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\blockchain\profile.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\metaverse\blockchain\settings.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -58,6 +61,9 @@
     <ClInclude Include="..\..\..\include\metaverse\blockchain\block.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\metaverse\blockchain\account_security_strategy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\lib\blockchain\block_chain_impl.cpp">
@@ -73,6 +79,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\lib\blockchain\orphan_pool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\blockchain\profile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\lib\blockchain\settings.cpp">
@@ -94,6 +103,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\lib\blockchain\block.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\lib\blockchain\account_security_strategy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -56,14 +56,14 @@ byte::byte(const byte& other)
 
 byte::operator uint8_t() const
 {
-    return value_; 
+    return value_;
 }
 
 std::istream& operator>>(std::istream& input, byte& argument)
 {
     std::string decimal;
     input >> decimal;
-        
+
     // We have this byte class only because deserialization doesn't
     // treat 8 bit values as decimal numbers (unlike 16+ bit numbers).
 

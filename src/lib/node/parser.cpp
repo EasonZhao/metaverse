@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -36,7 +36,7 @@ BC_DECLARE_CONFIG_DEFAULT_PATH("libbitcoin" / "bn.cfg")
 
 namespace libbitcoin {
 namespace node {
-    
+
 using namespace boost::filesystem;
 using namespace boost::program_options;
 using namespace bc::config;
@@ -88,12 +88,19 @@ options_metadata parser::load_options()
             default_value(false)->zero_tokens(),
         "Display version information."
     )
-	(
-		"daemon,d",
-		value<bool>(&configured.daemon)->
-			default_value(false)->zero_tokens(),
-		"Run in daemon mode or not"
-	);
+    (
+        "daemon,d",
+        value<bool>(&configured.daemon)->
+            default_value(false)->zero_tokens(),
+        "Run in daemon mode or not"
+    )
+//   (
+//        BS_UI_VARIABLE "ui,u",
+//        value<bool>(&configured.ui)->
+//        default_value(false),
+//       "Open wallet UI."
+//    )
+    ;
 
     return description;
 }
@@ -141,6 +148,11 @@ options_metadata parser::load_settings()
         "network.identifier",
         value<uint32_t>(&configured.network.identifier),
         "The magic number for message headers, defaults to 3652501241."
+    )
+    (
+        "network.use_ipv6",
+        value<bool>(&configured.network.use_ipv6),
+        "Use IPV6, defaults to true."
     )
     (
         "network.inbound_port",
@@ -208,6 +220,11 @@ options_metadata parser::load_settings()
         "Request that peers relay transactions, defaults to true."
     )
     (
+        "network.enable_re_seeding",
+        value<bool>(&configured.network.enable_re_seeding),
+        "Re-connect the seed nodes to refresh local hosts cache, when the actual number of outgoing network connection <= 1. defaults to true."
+    )
+    (
         "network.hosts_file",
         value<path>(&configured.network.hosts_file),
         "The peer hosts cache file path, defaults to 'hosts.cache'."
@@ -236,6 +253,16 @@ options_metadata parser::load_settings()
         "network.peer",
         value<config::endpoint::list>(&configured.network.peers),
         "Persistent host:port channels, multiple entries allowed."
+    )
+    (
+        "network.upnp_map_port",
+        value<bool>(&configured.network.upnp_map_port),
+        "Persistent host:port channels, multiple entries allowed."
+    )
+    (
+        "network.be_found",
+        value<bool>(&configured.network.be_found),
+        "If broadcast your upnp extern address on the network to allow others find you and connect you."
     )
     (
         "network.seed",
@@ -286,6 +313,11 @@ options_metadata parser::load_settings()
         value<config::checkpoint::list>(&configured.chain.checkpoints),
         "A hash:height checkpoint, multiple entries allowed."
     )
+    (
+        "blockchain.collect_split_stake",
+        value<bool>(&configured.chain.collect_split_stake),
+        "Use testnet rules for determination of work required, defaults to false."
+    )
 
     /* [node] */
     (
@@ -317,7 +349,7 @@ bool parser::parse(int argc, const char* argv[], std::ostream& error)
         load_environment_variables(variables, BN_ENVIRONMENT_VARIABLE_PREFIX);
 
         // Don't load the rest if any of these options are specified.
-        if (!get_option(variables, BN_VERSION_VARIABLE) && 
+        if (!get_option(variables, BN_VERSION_VARIABLE) &&
             !get_option(variables, BN_SETTINGS_VARIABLE) &&
             !get_option(variables, BN_HELP_VARIABLE))
         {

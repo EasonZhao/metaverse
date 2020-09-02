@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -19,6 +19,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <metaverse/blockchain/organizer.hpp>
+#include <metaverse/macros_define.hpp>
 #include <metaverse/blockchain/block.hpp>
 
 #include <boost/thread.hpp>
@@ -31,12 +32,12 @@
 #include <metaverse/blockchain/orphan_pool.hpp>
 #include <metaverse/blockchain/organizer.hpp>
 #include <metaverse/blockchain/settings.hpp>
-#include <metaverse/blockchain/simple_chain.hpp>
 #include <metaverse/blockchain/validate_block_impl.hpp>
 #include <metaverse/bitcoin/chain/header.hpp>
 #include <metaverse/node/protocols/protocol_block_out.hpp>
 #include <metaverse/bitcoin/wallet/payment_address.hpp>
 #include <metaverse/bitcoin/formats/base_16.hpp>
+#include <metaverse/consensus/witness.hpp>
 
 namespace libbitcoin {
 namespace blockchain {
@@ -46,7 +47,7 @@ using namespace bc::config;
 
 #define NAME "organizer"
 
-organizer::organizer(threadpool& pool, simple_chain& chain,
+organizer::organizer(threadpool& pool, block_chain_impl& chain,
     const settings& settings)
   : stopped_(true),
     use_testnet_rules_(settings.use_testnet_rules),
@@ -91,46 +92,6 @@ bool organizer::strict(uint64_t fork_point) const
     return checkpoints_.empty() || fork_point >= checkpoints_.back().height();
 }
 
-code organizer::verify_asset_exist(uint64_t fork_point,
-    const block_detail::list& orphan_chain, uint64_t orphan_index)
-{
-    block_chain_impl& chain = (block_chain_impl&)chain_;
-    auto& block = *orphan_chain[orphan_index]->actual();
-    std::set<string> assets;
-       for(auto& tx : block.transactions){
-           for(auto& output : tx.outputs){
-               if(output.is_asset_issue()) {
-                auto result = assets.insert(output.get_asset_symbol());
-                if(result.second == false){
-                    return error::asset_exist;
-                }
-            }
-        }
-    }
-
-    for(auto& i: assets){
-        uint64_t height = 0;
-        if(chain.get_asset_height(i, height) && height <= fork_point) {
-            return error::asset_exist;
-        }
-    }
-
-    for(uint64_t i = 0; i < orphan_index; ++i) {
-        auto& block = *orphan_chain[orphan_index - 1]->actual();
-           for(auto& tx : block.transactions){
-               for(auto& output : tx.outputs){
-                   if(output.is_asset_issue()) {
-                    if(assets.find(output.get_asset_symbol()) != assets.end()) {
-                        return error::asset_exist;
-                    }
-                }
-            }
-        }
-    }
-
-    return error::success;
-}
-
 // This verifies the block at orphan_chain[orphan_index]->actual()
 code organizer::verify(uint64_t fork_point,
     const block_detail::list& orphan_chain, uint64_t orphan_index)
@@ -149,33 +110,42 @@ code organizer::verify(uint64_t fork_point,
     };
 
     // Validates current_block
-    validate_block_impl validate(chain_, fork_point, orphan_chain,
-        orphan_index, height, *current_block, use_testnet_rules_, checkpoints_,
-            callback);
+    validate_block_impl validate(chain_, fork_point, orphan_chain, orphan_index, height,
+        *current_block, use_testnet_rules_, checkpoints_, callback);
 
     // Checks that are independent of the chain.
-    auto ec = validate.check_block(static_cast<blockchain::block_chain_impl&>(this->chain_));
-
-    if (ec)
+    auto ec = validate.check_block(chain_);
+    if (error::success != ec.value()) {
+        log::warning(LOG_BLOCKCHAIN) << "organizer: check_block failed! error:"
+            << std::to_string(ec.value()) << ", fork_point: "
+            << std::to_string(fork_point) << ", orphan_index: " << std::to_string(orphan_index);
         return ec;
-
-    validate.initialize_context();
+    }
 
     // Checks that are dependent on height and preceding blocks.
     ec = validate.accept_block();
-
-    if (ec)
+    if (error::success != ec.value()) {
+        log::warning(LOG_BLOCKCHAIN) << "organizer: accept_block failed! error:"
+            << std::to_string(ec.value()) << ", fork_point: "
+            << std::to_string(fork_point) << ", orphan_index: " << std::to_string(orphan_index);
         return ec;
-
-    // Start strict validation if past last checkpoint.
-    if (!strict(fork_point))
-        return ec;
+    }
 
     const auto total_inputs = count_inputs(*current_block);
     const auto total_transactions = current_block->transactions.size();
 
+    // Start strict validation if past last checkpoint.
+    if (!strict(fork_point)) {
+        log::info(LOG_BLOCKCHAIN)
+            << get_block_version(current_block->header)
+            << " block [" << height << "] synced (" << total_transactions
+            << ") txs and (" << total_inputs << ") inputs";
+        return ec;
+    }
+
     log::info(LOG_BLOCKCHAIN)
-        << "Block [" << height << "] verify (" << total_transactions
+        << get_block_version(current_block->header)
+        << " block [" << height << "] verify (" << total_transactions
         << ") txs and (" << total_inputs << ") inputs";
 
     // Time this for logging.
@@ -183,16 +153,12 @@ code organizer::verify(uint64_t fork_point,
     {
         hash_digest err_tx;
         // Checks that include input->output traversal.
-        ec = validate.connect_block(err_tx);
-        if(ec && err_tx != null_hash) {	
-            dynamic_cast<block_chain_impl&>(chain_).pool().delete_tx(err_tx);
-		}
+        ec = validate.connect_block(err_tx, chain_);
+        if(ec && err_tx != null_hash) {
+            chain_.pool().delete_tx(err_tx);
+        }
 
     };
-
-    if(ec == error::success) {
-        ec = verify_asset_exist(fork_point, orphan_chain, orphan_index);
-    }
 
     // Execute the timed validation.
     const auto elapsed = timer<std::chrono::milliseconds>::duration(timed);
@@ -202,7 +168,8 @@ code organizer::verify(uint64_t fork_point,
     const auto verified = ec ? "unverified" : "verified";
 
     log::info(LOG_BLOCKCHAIN)
-        << "Block [" << height << "] " << verified << " in ("
+        << get_block_version(current_block->header)
+        << " block [" << height << "] verified in ("
         << seconds_per_block << ") secs or (" << ms_per_input << ") ms/input";
 
     return ec;
@@ -230,98 +197,253 @@ void organizer::filter_orphans(message::get_data::ptr message)
 {
     orphan_pool_.filter(message);
 }
+
 void organizer::process(block_detail::ptr process_block)
 {
+    using witness = consensus::witness;
     BITCOIN_ASSERT(process_block);
 
-    // Trace the chain in the orphan pool
-    auto orphan_chain = orphan_pool_.trace(process_block);
-    BITCOIN_ASSERT(orphan_chain.size() >= 1);
+    std::vector<block_detail::ptr> blocks;
+    blocks.push_back(process_block);
 
-    uint64_t fork_index;
-    const auto& hash = orphan_chain.front()->actual()->
+    while(blocks.empty() == false)
+    {
+        process_block = blocks.back();
+        blocks.pop_back();
+        // Trace the chain in the orphan pool
+        auto orphan_chain = orphan_pool_.trace(process_block);
+        BITCOIN_ASSERT(orphan_chain.size() >= 1);
+
+        uint64_t fork_index;
+        const auto& hash = orphan_chain.front()->actual()->
         header.previous_block_hash;
 
-    // Verify the blocks in the orphan chain.
-    if (chain_.get_height(fork_index, hash))
-        replace_chain(fork_index, orphan_chain);
-
-    // Don't mark all orphan_chain as processed here because there might be
-    // a winning fork from an earlier block.
-    process_block->set_processed();
-}
-
-void organizer::replace_chain(uint64_t fork_index,
-    block_detail::list& orphan_chain)
-{
-    u256 orphan_work = 0;
-
-    for (uint64_t orphan = 0; orphan < orphan_chain.size(); ++orphan)
-    {
-        // This verifies the block at orphan_chain[orphan]->actual()
-        if(!orphan_chain[orphan]->get_is_checked_work_proof())
+        // Verify the blocks in the orphan chain.
+        if (chain_.get_height(fork_index, hash))
         {
-            const auto ec = verify(fork_index, orphan_chain, orphan);
-            if (ec)
-            {
-                // If invalid block info is also set for the block.
-                if (ec != (code)error::service_stopped)
-                {
-                    const auto& header = orphan_chain[orphan]->actual()->header;
-                    const auto block_hash = encode_hash(header.hash());
+            bool replace_chain_done = false;
+            if (witness::is_dpos_enabled()) {
+                uint64_t current_block_height = 0;
+                DEBUG_ONLY(auto ok =) chain_.get_last_height(current_block_height);
+                BITCOIN_ASSERT(ok);
+                if (witness::is_witness_enabled(current_block_height)) {
+                    auto witness_list = witness::get().get_witness_list();
+                    if (!witness::is_in_same_epoch(fork_index, current_block_height)) {
+                        witness::get().update_witness_list(fork_index);
+                    }
 
-                    log::warning(LOG_BLOCKCHAIN)
-                        << "Invalid block [" << block_hash << "] " << ec.message();
+                    auto ret = replace_chain(fork_index, orphan_chain);
+                    replace_chain_done = true;
+
+                    const auto& num_of_poped_blocks = std::get<0>(ret);
+                    const auto& num_of_pushed_blocks = std::get<1>(ret);
+                    const auto need_recovery = num_of_poped_blocks == 0 && num_of_pushed_blocks == 0;
+                    const auto need_reupdate = num_of_poped_blocks != 0 && num_of_pushed_blocks == 0;
+                    if (need_recovery) {
+                        witness::get().swap_witness_list(witness_list);
+                    }
+                    else if (need_reupdate) {
+                        const auto& new_block_height = std::get<2>(ret);
+                        if (!witness::is_in_same_epoch(fork_index, new_block_height)) {
+                            witness::get().update_witness_list(new_block_height);
+                        }
+                    }
                 }
-
-                // Block is invalid, clip the orphans.
-                clip_orphans(orphan_chain, orphan, ec);
-                if(orphan_chain.empty())
-                    return;
-
-                // Stop summing work once we discover an invalid block
-                break;
             }
-	    else
-	    {
-                orphan_chain[orphan]->set_is_checked_work_proof(true);
-	    }
+
+            if (!replace_chain_done) {
+                DEBUG_ONLY(auto ret =) replace_chain(fork_index, orphan_chain);
+            }
+
+            if(orphan_chain.empty() == false)
+            {
+                const auto hash = orphan_chain.back()->actual()->header.hash();
+                block_detail::ptr block;
+                while((block = orphan_pool_.delete_pending_block(hash)))
+                {
+                    blocks.push_back(block);
+                    log::warning(LOG_BLOCKCHAIN) << "pop pendingblock hash:" << encode_hash(hash) << " process_block hash:" << encode_hash(block->actual()->header.hash());
+
+                    auto block_height = block->actual()->header.number;
+                    if (witness::is_begin_of_epoch(block_height) &&
+                        block_height >= witness::witness_enable_height + 2*witness::epoch_cycle_height) {
+                        auto epoch_height = block_height - 2*witness::epoch_cycle_height;
+                        chain_.calc_and_store_witness_profile(epoch_height);
+                    }
+                }
+            }
+        }
+        else
+        {
+            bool added = orphan_pool_.add_pending_block(hash, orphan_chain.back());
+            if (added) {
+                log::warning(LOG_BLOCKCHAIN) << "push pendingblock hash:" << encode_hash(hash) << " process_block hash:" << encode_hash(orphan_chain.back()->actual()->header.hash());
+            }
         }
 
-        const auto& orphan_block = orphan_chain[orphan]->actual();
-        orphan_work += block_work(orphan_block->header.bits);
+        // Don't mark all orphan_chain as processed here because there might be
+        // a winning fork from an earlier block.
+        process_block->set_processed();
     }
+}
 
-    // All remaining blocks in orphan_chain should all be valid now
-    // Compare the difficulty of the 2 forks (original and orphan)
+/*********************************************************************
+ * this set include blocks which cause consensus validation problems.
+ ********************************************************************/
+// the pair's structure: first is block height, second is block hash
+static std::set<std::pair<uint64_t, std::string>> exception_blocks {
+    // this block has error of merkle_mismatch,
+    // because it exist a too long memo text which is more than 300 bytes.
+    // memo text length should be less than 256 bytes limited by the database record design.
+    // we will add this length verification in the transaction validation after nova version.
+    {1211234, "3a17c696ba0d506b07e85b8440a99d868ae93c985064eaf4c616d13911bd97cb"},
+    // this block does not satisfy new consensus verify of input/output
+    {1258192, "d7d5d80c8cb760b794f156c36b519ad9b4b10b9dfcd4e123c8f54be3c71432d3"}
+};
+
+static u256 get_orphan_difficulty_without_verify(const block_detail::list& orphan_chain)
+{
+    u256 orphan_work = 0;
+    for (auto& block : orphan_chain) {
+        orphan_work += block_work(block->actual()->header.bits);
+    }
+    return orphan_work;
+}
+
+// Return a tuple <number of poped blocks, number of pushed blocks, current block height>
+std::tuple<uint64_t, uint64_t, uint64_t>
+organizer::replace_chain(uint64_t fork_index, block_detail::list& orphan_chain)
+{
+    auto ret = std::make_tuple<uint64_t, uint64_t, uint64_t>(0, 0, 0);
+    auto& num_of_poped_blocks = std::get<0>(ret);
+    auto& num_of_pushed_blocks = std::get<1>(ret);
+    auto& current_block_height = std::get<2>(ret);
+
+    DEBUG_ONLY(auto ok =) chain_.get_last_height(current_block_height);
+    BITCOIN_ASSERT(ok);
+
     const auto begin_index = fork_index + 1;
 
     u256 main_work;
     DEBUG_ONLY(auto result =) chain_.get_difficulty(main_work, begin_index);
     BITCOIN_ASSERT(result);
 
-    delete_fork_chain_hash(orphan_chain[orphan_chain.size() - 1]->actual()->header.previous_block_hash);
+    u256 orphan_work = get_orphan_difficulty_without_verify(orphan_chain);
+
+    if (orphan_work > main_work) {
+        // reset and recalc with verify
+        orphan_work = 0;
+        static std::pair<hash_digest, uint32_t> failed_orphan = std::make_pair(null_hash, 0);
+        for (uint64_t orphan = 0; orphan < orphan_chain.size(); ++orphan)
+        {
+            // This verifies the block at orphan_chain[orphan]->actual()
+            if(!orphan_chain[orphan]->get_is_checked_work_proof())
+            {
+                const auto ec = verify(fork_index, orphan_chain, orphan);
+                if (ec)
+                {
+                    // If invalid block info is also set for the block.
+                    if (ec.value() != error::service_stopped)
+                    {
+                        const auto& header = orphan_chain[orphan]->actual()->header;
+                        const auto block_hash = encode_hash(header.hash());
+
+                        if (exception_blocks.count(std::make_pair(header.number, block_hash)))
+                        {
+                            orphan_chain[orphan]->set_is_checked_work_proof(true);
+                            const auto& orphan_block = orphan_chain[orphan]->actual();
+                            orphan_work += block_work(orphan_block->header.bits);
+                            continue;
+                        }
+
+                        if (header.hash() != failed_orphan.first) {
+                            failed_orphan = std::make_pair(header.hash(), 1);
+                        }
+                        else {
+                            ++failed_orphan.second;
+                            constexpr uint32_t too_many_fails = 100;
+                            constexpr uint32_t max_pop_gaps = 1000;
+                            if (failed_orphan.second >= too_many_fails
+                                && fork_index + max_pop_gaps > current_block_height) {
+                                failed_orphan = std::make_pair(null_hash, 0); // reset
+                                // force pop blocks, verify again later(keep syncing).
+                                block_chain_writer locked_write(chain_);
+                                block_detail::list released_blocks;
+                                chain_.pop_from(released_blocks, begin_index);
+                                if (!released_blocks.empty()) {
+                                    log::warning(LOG_BLOCKCHAIN)
+                                        << "force pop block from " << begin_index
+                                        << ", verify again orphan block " << block_hash;
+                                    num_of_poped_blocks = released_blocks.size();
+                                    current_block_height = released_blocks.front()->actual()->header.number - 1;
+                                }
+                                return ret;
+                            }
+                        }
+
+                        log::warning(LOG_BLOCKCHAIN)
+                            << "Invalid block [" << block_hash << "] " << ec.message();
+                    }
+
+                    // Block is invalid, clip the orphans.
+                    clip_orphans(orphan_chain, orphan, ec);
+                    if(orphan_chain.empty())
+                    {
+                        log::warning(LOG_BLOCKCHAIN) << "orphan_chain.empty()";
+                        return ret;
+                    }
+
+                    // Stop summing work once we discover an invalid block
+                    break;
+                }
+                else
+                {
+                    orphan_chain[orphan]->set_is_checked_work_proof(true);
+                }
+            }
+
+            const auto& orphan_block = orphan_chain[orphan]->actual();
+            orphan_work += block_work(orphan_block->header.bits);
+        }
+    }
+
+    // All remaining blocks in orphan_chain should all be valid now
+    // Compare the difficulty of the 2 forks (original and orphan)
+    delete_fork_chain_hash(orphan_chain.back()->actual()->header.previous_block_hash);
     if (orphan_work <= main_work)
     {
- 		if(orphan_chain.size() % node::locator_cap  == 0)
-			(*(orphan_chain.end() - 1))->set_error(error::fetch_more_block);
-	    add_fork_chain_hash((*(orphan_chain.end() - 1))->actual()->header.hash());
+        if(orphan_chain.size() % node::locator_cap  == 0)
+            orphan_chain.back()->set_error(error::fetch_more_block);
+        add_fork_chain_hash(orphan_chain.back()->actual()->header.hash());
 
         log::debug(LOG_BLOCKCHAIN)
-            << "Insufficient work to reorganize at [" << begin_index << "]" << "orphan_work:" << orphan_work << " main_work:" << main_work;
-        return;
+            << "Insufficient work to reorganize at [" << begin_index << "]"
+            << "orphan_work:" << orphan_work << " main_work:" << main_work;
+        return ret;
     }
+
+    ////////////////// WRITE LOCKED ///////////////////////////////////
+    block_chain_writer locked_write(chain_);
 
     // Replace! Switch!
     block_detail::list released_blocks;
-    DEBUG_ONLY(auto success =) chain_.pop_from(released_blocks, begin_index);
-    BITCOIN_ASSERT(success);
+    auto pop_all_success = chain_.pop_from(released_blocks, begin_index);
 
-    if (!released_blocks.empty())
-        log::warning(LOG_BLOCKCHAIN) 
-            << " blockchain fork at height:" << released_blocks.front()->actual()->header.number 
+    if (!released_blocks.empty()) {
+        num_of_poped_blocks = released_blocks.size();
+        current_block_height = released_blocks.front()->actual()->header.number - 1;
+        if (!pop_all_success) {
+            log::warning(LOG_BLOCKCHAIN)
+                << " not all blocks poped out successfully from " << begin_index
+                << ", only pop backward to " << current_block_height
+                << ", so stop replace chain.";
+            return ret;
+        }
+        log::warning(LOG_BLOCKCHAIN)
+            << " blockchain fork at height:" << released_blocks.front()->actual()->header.number
             << " begin_index:"  << encode_hash(released_blocks.front()->actual()->header.hash())
             << " size:"  << released_blocks.size();
+    }
 
     // We add the arriving blocks first to the main chain because if
     // we add the blocks being replaced back to the pool first then
@@ -333,6 +455,7 @@ void organizer::replace_chain(uint64_t fork_index,
     // All arrival_blocks should be blocks from the pool.
     auto arrival_index = fork_index;
 
+    block_detail::list pushed_blocks;
     for (const auto arrival_block: orphan_chain)
     {
         orphan_pool_.remove(arrival_block);
@@ -341,15 +464,27 @@ void organizer::replace_chain(uint64_t fork_index,
         arrival_block->set_height(++arrival_index);
 
         // THIS IS THE DATABASE BLOCK WRITE AND INDEX OPERATION.
-        DEBUG_ONLY(const auto result =) chain_.push(arrival_block);
-        BITCOIN_ASSERT(result);
-
-        if (!released_blocks.empty())
-        log::debug(LOG_BLOCKCHAIN)
-            << " blockchain fork new block number:" << arrival_block->actual()->header.number 
-            << " hash_index:"  << encode_hash(arrival_block->actual()->header.hash())
-            << " miner address:"  << wallet::payment_address::extract(arrival_block->actual()->transactions[0].outputs[0].script);
+        if(chain_.push(arrival_block) == false)
+        {
+            log::warning(LOG_BLOCKCHAIN)
+                << " push block height:" << arrival_block->actual()->header.number
+                << " hash:" << encode_hash(arrival_block->actual()->header.hash())
+                << " failed";
+            // if push block failed, stop replace
+            break;
+        }
+        else
+        {
+            current_block_height = arrival_block->actual()->header.number;
+            pushed_blocks.push_back(arrival_block);
+            log::debug(LOG_BLOCKCHAIN)
+                << " push block height:" << arrival_block->actual()->header.number
+                << " hash:" << encode_hash(arrival_block->actual()->header.hash())
+                << " succeed";
+        }
     }
+
+    num_of_pushed_blocks = pushed_blocks.size();
 
     // Add the old blocks back to the pool (as processed with orphan height).
     for (const auto replaced_block: released_blocks)
@@ -357,14 +492,18 @@ void organizer::replace_chain(uint64_t fork_index,
         replaced_block->set_processed();
         orphan_pool_.add(replaced_block);
 
-        if (!released_blocks.empty())
-            log::debug(LOG_BLOCKCHAIN)
-                << " blockchain fork old block number:" << replaced_block->actual()->header.number 
-                << " hash_index:"  << encode_hash(replaced_block->actual()->header.hash())
-                << " miner address:"  << wallet::payment_address::extract(replaced_block->actual()->transactions[0].outputs[0].script);
+        log::warning(LOG_BLOCKCHAIN)
+            << " blockchain fork old block number:" << replaced_block->actual()->header.number
+            << " hash_index:"  << encode_hash(replaced_block->actual()->header.hash())
+            << " miner address:"  << wallet::payment_address::extract(replaced_block->actual()->transactions[0].outputs[0].script);
+        for(auto& tx : replaced_block->actual()->transactions)
+        {
+            log::warning(LOG_BLOCKCHAIN) << " forked transaction hash:" << encode_hash(tx.hash()) << " data:" << tx.to_string(0);
+        }
     }
 
-    notify_reorganize(fork_index, orphan_chain, released_blocks);
+    notify_reorganize(fork_index, pushed_blocks, released_blocks);
+    return ret;
 }
 
 void organizer::remove_processed(block_detail::ptr remove_block)
@@ -424,12 +563,12 @@ void organizer::notify_reorganize(uint64_t fork_point,
 
 void organizer::fired()
 {
-	subscriber_->relay(error::success, 0, {}, {});
+    subscriber_->relay(error::mock, 0, {}, {});//event to check whether service is stopped
 }
 
 std::unordered_map<hash_digest, uint64_t> organizer::get_fork_chain_last_block_hashes()
 {
-    unordered_map<hash_digest, uint64_t> hashes;
+    std::unordered_map<hash_digest, uint64_t> hashes;
     boost::unique_lock<boost::mutex> lock(mutex_fork_chain_last_block_hashes_);
     hashes = fork_chain_last_block_hashes_;
     return hashes;

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -32,36 +32,13 @@
 namespace libbitcoin {
 namespace chain {
 
-header header::factory_from_data(const data_chunk& data,
-    bool with_transaction_count)
-{
-    header instance;
-    instance.from_data(data, with_transaction_count);
-    return instance;
-}
-
-header header::factory_from_data(std::istream& stream,
-    bool with_transaction_count)
-{
-    header instance;
-    instance.from_data(stream, with_transaction_count);
-    return instance;
-}
-
-header header::factory_from_data(reader& source,
-    bool with_transaction_count)
-{
-    header instance;
-    instance.from_data(source, with_transaction_count);
-    return instance;
-}
-
 uint64_t header::satoshi_fixed_size_without_transaction_count()
 {
     return 148;
 }
 
 header::header()
+    : header(0, null_hash, null_hash, 0, 0, 0, 0, 0, 0)
 {
 }
 
@@ -149,6 +126,21 @@ bool header::is_valid() const
         (nonce != 0);
 }
 
+bool header::is_proof_of_stake() const
+{
+    return version == block_version_pos;
+}
+
+bool header::is_proof_of_work() const
+{
+    return version == block_version_pow;
+}
+
+bool header::is_proof_of_dpos() const
+{
+    return version == block_version_dpos;
+}
+
 void header::reset()
 {
     version = 0;
@@ -163,20 +155,7 @@ void header::reset()
     mutex_.unlock();
 }
 
-bool header::from_data(const data_chunk& data,
-    bool with_transaction_count)
-{
-    data_source istream(data);
-    return from_data(istream, with_transaction_count);
-}
-
-bool header::from_data(std::istream& stream, bool with_transaction_count)
-{
-    istream_reader source(stream);
-    return from_data(source, with_transaction_count);
-}
-
-bool header::from_data(reader& source, bool with_transaction_count)
+bool header::from_data_t(reader& source, bool with_transaction_count)
 {
     reset();
 
@@ -209,24 +188,8 @@ bool header::from_data(reader& source, bool with_transaction_count)
     return result;
 }
 
-data_chunk header::to_data(bool with_transaction_count) const
-{
-    data_chunk data;
-    data_sink ostream(data);
-    to_data(ostream, with_transaction_count);
-    ostream.flush();
-    BITCOIN_ASSERT(data.size() == serialized_size(with_transaction_count));
-    return data;
-}
 
-void header::to_data(std::ostream& stream,
-    bool with_transaction_count) const
-{
-    ostream_writer sink(stream);
-    to_data(sink, with_transaction_count);
-}
-
-void header::to_data(writer& sink, bool with_transaction_count) const
+void header::to_data_t(writer& sink, bool with_transaction_count) const
 {
     sink.write_4_bytes_little_endian(version);
     sink.write_hash(previous_block_hash);
@@ -289,6 +252,32 @@ bool operator==(const header& left, const header& right)
 bool operator!=(const header& left, const header& right)
 {
     return !(left == right);
+}
+
+std::string get_block_version(const header& header)
+{
+    return get_block_version(header.version);
+}
+
+std::string get_block_version(block_version version)
+{
+    return get_block_version((uint32_t)version);
+}
+
+std::string get_block_version(uint32_t version)
+{
+    switch (version) {
+    case block_version_any:
+        return "Any";
+    case block_version_pow:
+        return "PoW";
+    case block_version_pos:
+        return "PoS";
+    case block_version_dpos:
+        return "DPoS";
+    default:;
+    }
+    return "Unknown";
 }
 
 } // namspace chain

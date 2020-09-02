@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -23,11 +15,19 @@
     <ClInclude Include="..\..\..\include\metaverse\database\databases\account_asset_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\account_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\address_asset_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\address_did_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\address_mit_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\asset_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\base_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\blockchain_asset_cert_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\blockchain_asset_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\blockchain_did_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\blockchain_mit_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\blockchain_witness_cert_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\blockchain_witness_profile_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\block_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\history_database.hpp" />
+    <ClInclude Include="..\..\..\include\metaverse\database\databases\mit_history_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\spend_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\stealth_database.hpp" />
     <ClInclude Include="..\..\..\include\metaverse\database\databases\transaction_database.hpp" />
@@ -71,11 +71,19 @@
     <ClCompile Include="..\..\..\src\lib\database\databases\account_asset_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\account_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\address_asset_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\address_did_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\address_mit_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\asset_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\base_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\blockchain_asset_cert_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\blockchain_asset_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\blockchain_did_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\blockchain_mit_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\blockchain_witness_cert_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\blockchain_witness_profile_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\block_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\history_database.cpp" />
+    <ClCompile Include="..\..\..\src\lib\database\databases\mit_history_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\spend_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\stealth_database.cpp" />
     <ClCompile Include="..\..\..\src\lib\database\databases\transaction_database.cpp" />
@@ -104,19 +112,6 @@
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -135,12 +130,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -150,52 +139,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>libdatabase-vc140-mt-gd</TargetName>
-    <IncludePath>..\..\..\..\metaverse\include;..\..\..\..\boost_1_63_0;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\..\..\metaverse\include;..\..\..\..\boost_1_63_0;$(IncludePath)</IncludePath>
     <TargetName>libdatabase-vc140-mt</TargetName>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level1</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_LIB;BC_STATIC;BCD_STATIC;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;BC_STATIC;BCD_STATIC;BCB_STATIC;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\..\boost_1_63_0;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -205,9 +165,10 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_LIB;BC_STATIC;BCD_STATIC;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;BC_STATIC;BCD_STATIC;BCB_STATIC;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\..\boost_1_63_0;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

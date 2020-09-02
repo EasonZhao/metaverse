@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -56,28 +56,36 @@ protocol_transaction_in::protocol_transaction_in(p2p& network,
 {
 }
 
+protocol_transaction_in::ptr protocol_transaction_in::do_subscribe()
+{
+    SUBSCRIBE2(inventory, handle_receive_inventory, _1, _2);
+    SUBSCRIBE2(transaction_message, handle_receive_transaction, _1, _2);
+    protocol_events::start(BIND1(handle_stop, _1));
+    return std::dynamic_pointer_cast<protocol_transaction_in>(protocol::shared_from_this());
+}
+
 // Start.
 //-----------------------------------------------------------------------------
 
 void protocol_transaction_in::start()
 {
-    protocol_events::start(BIND1(handle_stop, _1));
 
     // TODO: move memory_pool to a derived class protocol_transaction_in_70002.
     // Prior to this level the mempool message is not available.
     if (refresh_pool_)
     {
-    	log::trace(LOG_NODE) << "protocol transaction in refresh pool";
+        log::trace(LOG_NODE) << "protocol transaction in refresh pool";
         // Refresh transaction pool on connect.
         SEND2(memory_pool(), handle_send, _1, memory_pool::command);
 
         // Refresh transaction pool on blockchain reorganization.
         blockchain_.subscribe_reorganize(
             BIND4(handle_reorganized, _1, _2, _3, _4));
+        if (channel_stopped()) {
+            blockchain_.fired();
+        }
     }
 
-    SUBSCRIBE2(inventory, handle_receive_inventory, _1, _2);
-    SUBSCRIBE2(transaction_message, handle_receive_transaction, _1, _2);
 }
 
 // Receive inventory sequemessagence.
@@ -86,7 +94,7 @@ void protocol_transaction_in::start()
 bool protocol_transaction_in::handle_receive_inventory(const code& ec,
     inventory_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -108,8 +116,8 @@ bool protocol_transaction_in::handle_receive_inventory(const code& ec,
 //        log::trace(LOG_NODE)
 //            << "Unexpected transaction inventory from [" << authority() << "]";
 //        return ! misbehaving(20);
-    	stop(error::not_found);
-    	return false;
+        stop(error::not_found);
+        return false;
     }
 
     auto hash = message->inventories.empty() ? "" : encode_hash(message->inventories[0].hash);
@@ -123,8 +131,7 @@ bool protocol_transaction_in::handle_receive_inventory(const code& ec,
 void protocol_transaction_in::handle_filter_floaters(const code& ec,
     get_data_ptr message)
 {
-    if (stopped() || ec == (code)error::service_stopped ||
-        message->inventories.empty())
+    if (stopped(ec) || message->inventories.empty())
         return;
 
     if (ec)
@@ -144,8 +151,7 @@ void protocol_transaction_in::handle_filter_floaters(const code& ec,
 void protocol_transaction_in::send_get_data(const code& ec,
     get_data_ptr message)
 {
-    if (stopped() || ec == (code)error::service_stopped || 
-        message->inventories.empty())
+    if (stopped(ec) || message->inventories.empty())
         return;
 
     if (ec)
@@ -167,7 +173,7 @@ void protocol_transaction_in::send_get_data(const code& ec,
 bool protocol_transaction_in::handle_receive_transaction(const code& ec,
     transaction_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -189,7 +195,7 @@ bool protocol_transaction_in::handle_receive_transaction(const code& ec,
         return false;
     }
 
-    log::info(LOG_NODE)
+    log::debug(LOG_NODE)
         << "Potential transaction from [" << authority() << "]." << encode_hash(message->hash());
 
     pool_.store(message,
@@ -232,13 +238,13 @@ void protocol_transaction_in::handle_store_confirmed(const code& ec,
 bool protocol_transaction_in::handle_reorganized(const code& ec, size_t,
     const block_ptr_list&, const block_ptr_list& outgoing)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped(ec))
         return false;
 
-    if (ec == (code)error::mock)
-	{
-		return true;
-	}
+    if (ec.value() == error::mock)
+    {
+        return true;
+    }
 
     if (ec)
     {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2013 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <metaverse/bitcoin/define.hpp>
 #include <metaverse/bitcoin/chain/output.hpp>
-#include <metaverse/bitcoin/chain/point.hpp>
+#include <metaverse/bitcoin/chain/output_point.hpp>
 
 namespace libbitcoin {
 namespace wallet {
@@ -38,7 +38,7 @@ struct BC_API select_outputs
     /// Select optimal outpoints for a spend from unspent outputs list.
     /// Return includes the amount of change remaining from the spend.
     static void select(chain::points_info& out,
-        chain::output_info::list unspent, uint64_t minimum_value,
+        chain::output_point_info::list unspent, uint64_t minimum_value,
         algorithm option=algorithm::greedy);
 };
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -24,11 +24,11 @@ namespace libbitcoin { //namespace libbitcoin
 
 int64_t unix_millisecond()
 {
-	using namespace std::chrono;
-	auto ms = duration_cast< milliseconds >(
-	    system_clock::now().time_since_epoch()
-	);
-	return ms.count();
+    using namespace std::chrono;
+    auto ms = duration_cast< milliseconds >(
+        system_clock::now().time_since_epoch()
+    );
+    return ms.count();
 }
 
 }//namespace libbitcoin

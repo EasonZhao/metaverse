@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -93,7 +93,7 @@ hd_public hd_public::from_secret(const ec_secret& secret,
     const hd_chain_code& chain_code, const hd_lineage& lineage)
 {
     ec_compressed point;
-    return secret_to_public(point, secret) ? 
+    return secret_to_public(point, secret) ?
         hd_public(point, chain_code, lineage) : hd_public();
 }
 
@@ -132,7 +132,7 @@ hd_public hd_public::from_key(const hd_key& key, uint32_t prefix)
     const hd_lineage lineage
     {
         prefix,
-        depth, 
+        depth,
         parent,
         child
     };

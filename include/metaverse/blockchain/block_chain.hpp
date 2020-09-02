@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -49,6 +49,8 @@ public:
     typedef handle1<hash_list> locator_block_hashes_fetch_handler;
     typedef handle1<chain::header::list> locator_block_headers_fetch_handler;
     typedef handle1<hash_list> transaction_hashes_fetch_handler;
+    typedef handle1<ec_signature> block_signature_fetch_handler;
+    typedef handle1<ec_compressed> block_public_key_fetch_handler;
     typedef handle1<uint64_t> block_height_fetch_handler;
     typedef handle1<uint64_t> last_height_fetch_handler;
     typedef handle1<chain::transaction> transaction_fetch_handler;
@@ -87,6 +89,18 @@ public:
         transaction_hashes_fetch_handler handler) = 0;
     virtual void fetch_block_transaction_hashes(const hash_digest& hash,
         transaction_hashes_fetch_handler handler) = 0;
+
+    virtual void fetch_block_signature(uint64_t height,
+                               block_signature_fetch_handler handler) = 0;
+
+    virtual void fetch_block_signature(const hash_digest& hash,
+                               block_signature_fetch_handler handler) = 0;
+
+    virtual void fetch_block_public_key(uint64_t height,
+        block_public_key_fetch_handler handler) = 0;
+
+    virtual void fetch_block_public_key(const hash_digest& hash,
+        block_public_key_fetch_handler handler) = 0;
 
     virtual void fetch_block_locator(block_locator_fetch_handler handler) = 0;
 
@@ -132,6 +146,16 @@ public:
 
     virtual void fired() = 0; // used for removing out of date action
     virtual organizer& get_organizer() = 0;
+
+    virtual bool check_pos_capability(
+        uint64_t best_height,
+        const wallet::payment_address& pay_addres) = 0;
+    virtual uint32_t select_utxo_for_staking(
+        const u256& bits,
+        uint64_t best_height,
+        const wallet::payment_address& pay_addres,
+        std::shared_ptr<chain::output_info::list> stake_outputs = nullptr,
+        uint32_t max_count = max_uint32) = 0;
 };
 
 } // namespace blockchain

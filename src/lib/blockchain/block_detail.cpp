@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -72,6 +72,16 @@ void block_detail::set_height(uint64_t height)
 uint64_t block_detail::height() const
 {
     return height_.load();
+}
+
+void block_detail::set_is_checked_work_proof(bool is_checked)
+{
+    is_checked_work_proof_.store(is_checked);
+}
+
+bool block_detail::get_is_checked_work_proof() const
+{
+    return is_checked_work_proof_.load();
 }
 
 void block_detail::set_error(const code& code)

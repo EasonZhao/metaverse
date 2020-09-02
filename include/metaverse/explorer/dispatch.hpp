@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -30,7 +30,7 @@
 
 namespace libbitcoin {
 namespace explorer {
-   
+
 /**
  * Dispatch the command with the raw arguments as provided on the command line.
  * @param[in]  argc    The number of elements in the argv array.
@@ -61,30 +61,13 @@ BCX_API console_result dispatch_command(int argc, const char* argv[],
  * The first argument in the array is the command symbolic name.
  * @param[in]  argc   The number of elements in the argv parameter.
  * @param[in]  argv   Array of command line arguments excluding the process.
- * @param[in]  input   The input stream (e.g. STDIO).
- * @param[in]  output  The output stream (e.g. STDOUT).
- * @param[in]  error   The error stream (e.g. STDERR).
- * @param[in]  blockchain block_chain instance.
- * @return            The appropriate console return code { -1, 0, 1 }.
- */
-//BCX_API console_result dispatch_command(int argc, const char* argv[],
-//    std::istream& input, std::ostream& output, std::ostream& error,
-//    libbitcoin::blockchain::block_chain& blockchain);
-
-/**
- * Invoke the command identified by the specified arguments.
- * The first argument in the array is the command symbolic name.
- * @param[in]  argc   The number of elements in the argv parameter.
- * @param[in]  argv   Array of command line arguments excluding the process.
- * @param[in]  input   The input stream (e.g. STDIO).
- * @param[in]  output  The output stream (e.g. STDOUT).
- * @param[in]  error   The error stream (e.g. STDERR).
  * @param[in]  node server_node instance.
+ * @param[in]  command version, defaults to v1.
  * @return            The appropriate console return code { -1, 0, 1 }.
  */
 BCX_API console_result dispatch_command(int argc, const char* argv[],
-    std::istream& input, std::ostream& output, std::ostream& error,
-    libbitcoin::server::server_node& node);
+    Json::Value& jv_output,
+    bc::server::server_node& node, uint8_t api_version = 1);
 
 } // namespace explorer
 } // namespace libbitcoin

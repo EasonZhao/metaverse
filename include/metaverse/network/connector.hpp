@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -51,6 +51,8 @@ public:
     connector(const connector&) = delete;
     void operator=(const connector&) = delete;
 
+    virtual ~connector() {}
+
     /// Try to connect to the endpoint.
     virtual void connect(const config::endpoint& endpoint,
         connect_handler handler, resolve_handler = nullptr);
@@ -80,7 +82,7 @@ private:
         connect_handler handler, resolve_handler);
     void handle_timer(const code& ec, socket::ptr socket,
         connect_handler handler);
-    void handle_connect(const boost_code& ec, asio::iterator iter, socket::ptr socket, deadline::ptr timer, connect_handler handler);
+    void handle_connect(const boost_code& ec, socket::ptr socket, deadline::ptr timer, connect_handler handler);
 
     std::atomic<bool> stopped_;
     threadpool& pool_;

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -45,7 +45,7 @@ public:
     short_hash read_short_hash();
     mini_hash read_mini_hash();
 
-    // These read data in little endian format: 
+    // These read data in little endian format:
     uint16_t read_2_bytes_little_endian();
     uint32_t read_4_bytes_little_endian();
     uint64_t read_8_bytes_little_endian();

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2015 libbitcoin-database developers (see COPYING).
+// Copyright (c) 2014-2020 libbitcoin-database developers (see COPYING).
 //
 //        GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 //
@@ -8,7 +8,7 @@
 #define MVS_DATABASE_HPP
 
 /**
- * API Users: Include only this header. Direct use of other headers is fragile 
+ * API Users: Include only this header. Direct use of other headers is fragile
  * and unsupported as header organization is subject to change.
  *
  * Maintainers: Do not include this header internal to this library.

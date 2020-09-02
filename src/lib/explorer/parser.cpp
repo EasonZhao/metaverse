@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -109,6 +109,17 @@ bool parser::parse(std::string& out_error, std::istream& input,
         } else {
             help_ = true;
         }
+    }
+    catch (const po::invalid_option_value& e)
+    {
+        // prevent boost from throwing 'std::out_of_range' when calling e.what()
+        // see /usr/include/boost/program_options/errors.hpp
+        // line 29 : return text.substr(text.find_first_not_of("-/"));
+        // which will throw 'std::out_of_range' when text.find_first_not_of return string::npos
+        po::invalid_option_value ex{e};
+        ex.set_original_token("OPTION");
+        out_error = ex.what();
+        return false;
     }
     catch (const po::error& e)
     {

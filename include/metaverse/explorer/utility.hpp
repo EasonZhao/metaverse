@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -34,7 +34,6 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/lexical_cast.hpp>
@@ -143,7 +142,7 @@ template <typename Item>
 data_chunk serialize_satoshi_item(const Item& item);
 
 /**
- * Write a value to a file in the specified path and otherwise to the 
+ * Write a value to a file in the specified path and otherwise to the
  * specified stream. Not unit testable due to embedded file i/o.
  * @param      Instance   The type of the instance to write.
  * @param[out] output     The fallback out stream.
@@ -244,8 +243,15 @@ BCX_API data_chunk wrap(const wallet::wrapped_data& data);
  * @param[in]  engine  The stream writing engine type to use, defaults to info.
  * @return             The output stream (for convenience).
  */
-BCX_API std::ostream& write_stream(std::ostream& output, const pt::ptree& tree,
+BCX_API std::ostream& write_stream(std::ostream& output, const Json::Value& tree,
     encoding_engine engine=encoding_engine::info);
+
+/**
+ * convert text to number, throw logic_error with specified description if failed
+ * eg. auto number = to_uint32_throw("1234", "wrong number format!")
+ */
+BCX_API uint32_t to_uint32_throw(const std::string& text, const std::string& except_desc);
+BCX_API uint64_t to_uint64_throw(const std::string& text, const std::string& except_desc);
 
 } // namespace explorer
 } // namespace libbitcoin

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -96,7 +96,7 @@ void protocol_block_sync::send_get_blocks(event_handler complete, bool reset)
 
 void protocol_block_sync::handle_send(const code& ec, event_handler complete)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     if (ec)
@@ -115,7 +115,7 @@ void protocol_block_sync::handle_send(const code& ec, event_handler complete)
 bool protocol_block_sync::handle_receive(const code& ec, block_ptr message,
     event_handler complete)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -146,19 +146,19 @@ bool protocol_block_sync::handle_receive(const code& ec, block_ptr message,
 // This is fired by the base timer and stop handler.
 void protocol_block_sync::handle_event(const code& ec, event_handler complete)
 {
-	if (ec == (code)error::service_stopped)
-	{
-		complete(ec);
-		return ;
-	}
+    if (ec.value() == error::service_stopped)
+    {
+        complete(ec);
+        return ;
+    }
 
-    if (ec == (code)error::channel_stopped)
+    if (ec.value() == error::channel_stopped)
     {
         complete(ec);
         return;
     }
 
-    if (ec && ec != (code)error::channel_timeout)
+    if (ec && ec.value() != error::channel_timeout)
     {
         log::trace(LOG_NODE)
             << "Failure in block sync timer for slot (" << reservation_->slot()

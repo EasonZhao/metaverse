@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -51,7 +51,7 @@ public:
     connections();
 
     /// Validate connections stopped.
-    ~connections();
+    virtual ~connections();
 
     /// This class is not copyable.
     connections(const connections&) = delete;
@@ -87,14 +87,15 @@ public:
     {
         for (const auto channel: safe_copy())
         {
-        	auto handler_copy = handler;
-        	channel->subscribe(std::move(handler_copy));//by jianglh
+            auto handler_copy = handler;
+            channel->subscribe(std::move(handler_copy));//by jianglh
 //            channel->subscribe(
 //                std::forward<message_handler<Message>>(handler));
         }
     }
 
     virtual void stop(const code& ec);
+    virtual void stop(const config::authority& authority);
     virtual void count(count_handler handler) const;
     virtual void store(channel::ptr channel, result_handler handler);
     virtual void remove(channel::ptr channel, result_handler handler);

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-protocol.
  *
@@ -52,7 +52,7 @@ bool packet::receive(zmq::socket& socket)
 {
     zmq::message message;
 
-    if (socket.receive(message) != error::success || message.empty())
+    if (socket.receive(message).value() != error::success || message.empty())
         return false;
 
     // Optional - ROUTER sockets strip this.
@@ -81,7 +81,7 @@ bool packet::send(zmq::socket& socket)
     // Add empty delimiter frame.
     message.enqueue(data_chunk{});
 
-    return encode_payload(message) && socket.send(message) == error::success;
+    return encode_payload(message) && socket.send(message).value() == error::success;
 }
 
 ////bool packet::send(const std::shared_ptr<zmq::socket>& socket)

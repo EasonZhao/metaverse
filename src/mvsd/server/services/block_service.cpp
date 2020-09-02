@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -147,8 +147,11 @@ bool block_service::unbind(zmq::socket& xpub, zmq::socket& xsub)
 bool block_service::handle_reorganization(const code& ec, uint64_t fork_point,
     const block_list& new_blocks, const block_list&)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped() || ec.value() == error::service_stopped)
         return false;
+
+    if (ec.value() == error::mock)
+        return true;
 
     if (ec)
     {
@@ -182,7 +185,7 @@ void block_service::publish_blocks(uint32_t fork_point,
     zmq::socket publisher(authenticator_, zmq::socket::role::publisher);
     const auto ec = publisher.connect(endpoint);
 
-    if (ec == (code)error::service_stopped)
+    if (ec.value() == error::service_stopped)
         return;
 
     if (ec)
@@ -219,7 +222,7 @@ void block_service::publish_block(zmq::socket& publisher, uint32_t height,
     broadcast.enqueue(block->to_data(false));
     const auto ec = publisher.send(broadcast);
 
-    if (ec == (code)error::service_stopped)
+    if (ec.value() == error::service_stopped)
         return;
 
     if (ec)
@@ -231,10 +234,9 @@ void block_service::publish_block(zmq::socket& publisher, uint32_t height,
     }
 
     // This isn't actually a request, should probably update settings.
-    if (settings_.log_requests)
-        log::debug(LOG_SERVER)
-            << "Published " << security << " block ["
-            << encode_hash(block->header.hash()) << "]";
+    log::debug(LOG_SERVER)
+        << "Published " << security << " block ["
+        << encode_hash(block->header.hash()) << "]";
 }
 
 } // namespace server

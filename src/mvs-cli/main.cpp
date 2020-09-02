@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -18,11 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <iostream>
-#include <metaverse/explorer.hpp>
+#include <metaverse/bitcoin/utility/path.hpp>
+#include <metaverse/bitcoin/unicode/ifstream.hpp>
+#include <boost/program_options.hpp>
+#include <jsoncpp/json/json.h>
 #include <metaverse/mgbubble/MongooseCli.hpp>
-#include <json/minijson_writer.hpp>
-#include <metaverse/explorer/extensions/command_extension_func.hpp>
+#include <metaverse/bitcoin/unicode/unicode.hpp>
 
 BC_USE_MVS_MAIN
 
@@ -34,54 +35,114 @@ BC_USE_MVS_MAIN
  * @return      The numeric result to return via console exit.
  */
 using namespace mgbubble::cli;
+namespace po = boost::program_options;
 
-void my_impl(const http_message* hm){
+void my_impl(const http_message* hm)
+{
     auto&& reply = std::string(hm->body.p, hm->body.len);
-    bc::cout<<reply<<std::endl;
+    Json::Reader reader;
+    Json::Value root;
+    if (reader.parse(reply, root) && root.isObject()) {
+        if (root["error"]["code"].isInt() && root["error"]["code"].asInt() != 0) {
+            bc::cout << root["error"].toStyledString();
+        }
+        else if (root["result"].isString()) {
+            bc::cout << root["result"].asString() <<std::endl;
+        }
+        else if(root["result"].isArray() || root["result"].isObject()) {
+            bc::cout << root["result"].toStyledString();
+        }
+        else {
+            bc::cout << reply << std::endl;
+        }
+    }
+    else {
+        bc::cout << reply << std::endl;
+    }
 }
 
 int bc::main(int argc, char* argv[])
 {
+    bc::set_utf8_stdout();
+    auto work_path = bc::default_data_path();
+    auto&& config_file = work_path / "mvs.conf";
+    std::string default_rpc_version = "3";
+    std::string url{"127.0.0.1:8820/rpc/v" + default_rpc_version};
 
-    if (argc == 1 || std::memcmp(argv[1], "-h", 2) == 0 ||
-                    std::memcmp(argv[1], "--help", 6) == 0)
-    {
-        bc::explorer::display_usage(bc::cout);
-        return console_result::okay;
-    }
-
-	// original commands
-    std::string cmd{argv[1]};
-	auto cmd_ptr = bc::explorer::find_extension(cmd);
-
-    auto is_online_cmd = [](const char* cmd){
-        return std::memcmp(cmd, "fetch-", 6) == 0;
-    };
-
-    if (!cmd_ptr && !is_online_cmd(cmd.c_str())){
-        auto ret = bc::explorer::dispatch_command(argc - 1, 
-            const_cast<const char**>(argv + 1), bc::cin, bc::cout, bc::cerr);
-        bc::cout<<std::endl;
-        return ret;
-    }
-
-	// extension commands
-    HttpReq req("127.0.0.1:8820/rpc", 3000, my_impl);
-    std::ostringstream sout{""};
-    minijson::object_writer writer(sout);
-    writer.write("method", argv[1]);
-
-	if (argc > 2){
-        minijson::array_writer awriter = writer.nested_array("params");
-        for (int i = 2 ; i < argc; i++) {
-            awriter.write(argv[i]);
+    // use '-c file_name' to specify config file name
+    if (argc > 1 && std::string(argv[1]) == "-c") {
+        if (argc < 3 || std::string(argv[2]).empty()) {
+            std::cout << "'-c' option must followed by a non-empty config file name."
+                      << std::endl;
+            return 0;
         }
-        awriter.close();
-	}
+        std::string file_name = argv[2];
+        config_file = work_path / file_name;
+        if (!boost::filesystem::exists(config_file)) {
+            std::cout << "The specified config file '"
+                      << config_file.string()
+                      << "' does not exist!"
+                      << std::endl;
+            return 0;
+        }
+        if (boost::filesystem::is_directory(config_file)) {
+            std::cout << "The specified config file '"
+                      << config_file.string()
+                      << "' is a directory!"
+                      << std::endl;
+            return 0;
+        }
+        argc -= 2;
+        argv += 2;
+    }
 
-    writer.close();
+    if (boost::filesystem::exists(config_file)) {
+        const auto& path = config_file.string();
+        bc::ifstream file(path);
 
-    req.post(sout.str());
+        if (!file.good()) {
+            BOOST_THROW_EXCEPTION(po::reading_file(path.c_str()));
+        }
 
+        std::string tmp;
+        std::string rpc_version;
+        po::options_description desc("");
+        desc.add_options()
+            ("server.rpc_version", po::value<std::string>(&rpc_version)->default_value(default_rpc_version))
+            ("server.mongoose_listen", po::value<std::string>(&tmp)->default_value("127.0.0.1:8820"));
+
+        po::variables_map vm;
+        po::store(po::parse_config_file(file, desc, true), vm);
+        po::notify(vm);
+
+        if (vm.count("server.mongoose_listen")) {
+            if (!tmp.empty()) {
+                // On Windows, client can not connect to 0.0.0.0
+                if (tmp.find("0.0.0.0") == 0) {
+                    tmp.replace(0, 7, "127.0.0.1");
+                }
+                url = tmp + "/rpc/v" + rpc_version;
+            }
+        }
+    }
+
+    // HTTP request call commands
+    HttpReq req(url, 3000, reply_handler(my_impl));
+
+    Json::Value jsonvar;
+    jsonvar["jsonrpc"] = "2.0";
+    jsonvar["id"] = 1;
+    jsonvar["method"] = (argc > 1) ? argv[1] : "help";
+    jsonvar["params"] = Json::arrayValue;
+
+    if (argc > 2)
+    {
+        for (int i = 2; i < argc; i++)
+        {
+            jsonvar["params"].append(argv[i]);
+        }
+    }
+
+    req.post(jsonvar.toStyledString());
     return 0;
 }

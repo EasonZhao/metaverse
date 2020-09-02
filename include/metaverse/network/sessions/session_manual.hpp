@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -34,7 +34,7 @@
 
 namespace libbitcoin {
 namespace network {
-    
+
 class p2p;
 
 /// Manual connections session, thread safe.
@@ -62,6 +62,9 @@ protected:
     /// Override to attach specialized protocols upon channel start.
     virtual void attach_protocols(channel::ptr channel);
 
+    void delay_new_connection(const std::string& hostname, uint16_t port
+            , channel_handler handler, uint32_t retries);
+
 private:
     void handle_started(const code& ec, result_handler handler);
     void start_connect(const std::string& hostname, uint16_t port,
@@ -73,9 +76,10 @@ private:
     void handle_channel_start(const code& ec, const std::string& hostname,
         uint16_t port, channel::ptr channel, channel_handler handler);
     void handle_channel_stop(const code& ec, const std::string& hostname,
-        uint16_t port);
+        uint16_t port, channel::ptr channel);
 
     bc::atomic<connector::ptr> connector_;
+    deadline::ptr connect_timer_;
 };
 
 } // namespace network

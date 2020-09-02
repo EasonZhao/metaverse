@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -33,7 +33,7 @@ class error_category_impl
 public:
     virtual const char* name() const BC_NOEXCEPT;
     virtual std::string message(int ev) const BC_NOEXCEPT;
-    virtual std::error_condition default_error_condition(int ev) 
+    virtual std::error_condition default_error_condition(int ev)
         const BC_NOEXCEPT;
 };
 
@@ -156,6 +156,8 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
             return "block version rejected at current height";
         case error::coinbase_height_mismatch:
             return "block height mismatch in coinbase";
+        case error::block_intermix_interval_error:
+            return "block intermix interval dismatch";
 
         // connect_block()
         case error::duplicate_or_spent:
@@ -179,13 +181,131 @@ std::string error_category_impl::message(int ev) const BC_NOEXCEPT
         case error::channel_stopped:
             return "channel is stopped";
         case error::not_satisfied:
-        	return "not satisfied";
+            return "not satisfied";
 
-        case error::asset_exist:
-            return "asset exist";
-
+        // asset errors
+        case error::asset_amount_overflow:
+            return "asset amount overflow";
+        case error::asset_amount_not_equal:
+            return "asset amount not equal";
+        case error::asset_symbol_not_match:
+            return "asset symbol not match";
         case error::asset_symbol_invalid:
             return "asset symbol invalid";
+        case error::asset_address_not_match:
+            return "asset attachment address must be equal with output address";
+        case error::asset_exist:
+            return "asset exist";
+        case error::asset_not_exist:
+            return "asset not exist";
+        case error::asset_issue_error:
+            return "issue asset error";
+        case error::asset_secondaryissue_error:
+            return "secondary issue asset error";
+        case error::asset_secondaryissue_share_not_enough:
+            return "user asset share is not enought to secondary issue asset ";
+        case error::asset_secondaryissue_threshold_invalid:
+            return "asset secondaryissue assetshare threshold value invalid";
+
+        // did errors
+        case error::did_symbol_not_match:
+            return "did symbol not match";
+        case error::did_symbol_invalid:
+            return "did symbol invalid";
+        case error::did_exist:
+            return "did exist";
+        case error::address_registered_did:
+            return "address already registered did";
+        case error::did_func_not_actived:
+            return "did function has not been actived until block height is larger than 1130000";
+        case error::did_address_not_match:
+            return "attach did address must equal with output address";
+        case error::did_address_needed:
+            return "did address is needed but not supplied";
+        case error::did_not_exist:
+            return "did does not exist";
+        case error::did_input_error:
+            return "did input error";
+        case error::did_multi_type_exist:
+            return "did attchment type can not be with some others";
+        case error::attenuation_model_param_error:
+            return "attenuation model parameter is wrong";
+
+        // cert errors
+        case error::asset_cert_error:
+            return "asset cert error";
+        case error::asset_cert_exist:
+            return "asset cert already exists";
+        case error::asset_cert_not_exist:
+            return "asset cert does not exist";
+        case error::asset_cert_not_provided:
+            return "asset cert is not provided";
+        case error::asset_cert_not_owned:
+            return "asset cert is not owned";
+        case error::asset_cert_issue_error:
+            return "asset cert issue error";
+
+        case error::asset_did_registerr_not_match:
+            return "attach todid must equal with asset issuer or cert owner";
+
+        case error::attachment_invalid:
+            return "attachment is invalid";
+
+        // features
+        case error::nova_feature_not_activated:
+            return "nova feature is not activated, it will be activated when block height is larger than 1270000";
+        case error::pos_feature_not_activated:
+            return "pos feature is not activated, it will be activated when block height is larger than 1924000";
+        case error::dpos_feature_not_activated:
+            return "dpos feature is not activated, it will be activated when block height is larger than ...";
+
+        // mit errors
+        case error::mit_error:
+            return "MIT token error";
+        case error::mit_exist:
+            return "MIT token already exists";
+        case error::mit_register_error:
+            return "MIT token register error";
+        case error::mit_symbol_invalid:
+            return "MIT symbol invalid";
+
+        case error::sequence_locked:
+            return "transaction currently locked";
+
+        case error::sync_disabled:
+            return "block sync is disabled";
+        case error::block_version_not_match:
+            return "block version not match";
+        case error::witness_sign_invalid:
+            return "witness sign is invalid";
+        case error::witness_mismatch:
+            return "witness mismatch";
+        case error::witness_vote_error:
+            return "witness vote error";
+        case error::witness_update_error:
+            return "witness update error";
+
+        case error::proof_of_stake:
+            return "proof of stake failed";
+        case error::illegal_coinstake:
+            return "illegal coinstake";
+        case error::miss_coinstake:
+            return "miss coinstake";
+        case error::extra_coinstakes:
+            return "more than one coinstake";
+        case error::coinstake_version_invalid:
+            return "coinstake version invalid";
+        case error::block_signature_invalid:
+            return "block signature failed";
+        case error::check_pos_genesis_error:
+            return "check pos genesis block failed";
+        case error::mst_coinbase_too_large:
+            return "asset coinbase value is too large";
+        case error::mst_coinbase_invalid:
+            return "asset coinbase value is invalid";
+
+        case error::invalid_output_script_lock_sequence:
+            return "invalid output script lock sequence";
 
         // unknown errors
         case error::unknown:
@@ -259,6 +379,9 @@ namespace error {
             case boost_error::destination_address_required:
                 return error::resolve_failed;
 
+#ifdef _MSC_VER
+            case asio_error::connection_refused:
+#endif
             case boost_error::broken_pipe:
             case boost_error::host_unreachable:
             case boost_error::network_down:

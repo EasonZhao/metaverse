@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -23,7 +23,7 @@
 #include <iostream>
 #include <metaverse/bitcoin.hpp>
 #include <metaverse/explorer/define.hpp>
-#include <metaverse/explorer/prop_tree.hpp>
+#include <metaverse/explorer/json_helper.hpp>
 #include <metaverse/explorer/utility.hpp>
 
 
@@ -41,11 +41,11 @@ console_result tx_decode::invoke(std::ostream& output, std::ostream& error)
     // This enables json-style array formatting.
     const auto json = encoding == encoding_engine::json;
 
-    write_stream(output, prop_tree(transaction, json), encoding);
+    write_stream(output, json_helper().prop_tree(transaction, json), encoding);
 
     return console_result::okay;
 }
 
-} //namespace commands 
-} //namespace explorer 
-} //namespace libbitcoin 
+} //namespace commands
+} //namespace explorer
+} //namespace libbitcoin

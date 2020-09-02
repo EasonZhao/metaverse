@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -149,13 +149,13 @@ bool transaction_service::unbind(zmq::socket& xpub, zmq::socket& xsub)
 bool transaction_service::handle_transaction(const code& ec, const index_list&,
     transaction_message::ptr tx)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped() || ec.value() == error::service_stopped)
         return false;
 
-    if (ec == (code)error::mock)
-	{
-		return true;
-	}
+    if (ec.value() == error::mock)
+    {
+        return true;
+    }
 
     if (ec)
     {
@@ -185,7 +185,7 @@ void transaction_service::publish_transaction(const transaction& tx)
     zmq::socket publisher(authenticator_, zmq::socket::role::publisher);
     auto ec = publisher.connect(endpoint);
 
-    if (ec == (code)error::service_stopped)
+    if (ec.value() == error::service_stopped)
         return;
 
     if (ec)
@@ -204,7 +204,7 @@ void transaction_service::publish_transaction(const transaction& tx)
     broadcast.enqueue(tx_msg.to_data(bc::message::version::level::maximum));
     ec = publisher.send(broadcast);
 
-    if (ec == (code)error::service_stopped)
+    if (ec.value() == error::service_stopped)
         return;
 
     if (ec)
@@ -216,10 +216,9 @@ void transaction_service::publish_transaction(const transaction& tx)
     }
 
     // This isn't actually a request, should probably update settings.
-    if (settings_.log_requests)
-        log::debug(LOG_SERVER)
-            << "Published " << security << " transaction ["
-            << encode_hash(tx_msg.hash()) << "]";
+    log::debug(LOG_SERVER)
+        << "Published " << security << " transaction ["
+        << encode_hash(tx_msg.hash()) << "]";
 }
 
 } // namespace server

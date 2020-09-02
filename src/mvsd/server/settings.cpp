@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -32,12 +32,16 @@ settings::settings()
     subscription_expiration_minutes(10),
     subscription_limit(100000000),
     mongoose_listen("127.0.0.1:8820"),
-    log_requests(false),
+    websocket_listen("127.0.0.1:8821"),
+    administrator_required(false),
+    log_level("DEBUG"),
+    rpc_version(""),
     secure_only(false),
     query_service_enabled(true),
     heartbeat_service_enabled(false),
     block_service_enabled(false),
     transaction_service_enabled(false),
+    websocket_service_enabled(true),
     public_query_endpoint("tcp://*:9091"),
     public_heartbeat_endpoint("tcp://*:9092"),
     public_block_endpoint("tcp://*:9093"),

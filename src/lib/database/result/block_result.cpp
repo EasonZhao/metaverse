@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -79,6 +79,34 @@ hash_digest block_result::transaction_hash(size_t index) const
     const auto first = memory + offset + index * hash_size;
     auto deserial = make_deserializer_unsafe(first);
     return deserial.read_hash();
+}
+
+ec_signature block_result::blocksig() const
+{
+    if (!(header().is_proof_of_stake() || header().is_proof_of_dpos()))
+        return ec_signature();
+
+    BITCOIN_ASSERT(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
+
+    const auto offset = header_size + height_size + count_size;
+    const auto first = memory + offset + transaction_count() * hash_size;
+    auto deserial = make_deserializer_unsafe(first);
+    return deserial.read_bytes<ec_signature_size>();
+}
+
+ec_compressed block_result::public_key() const
+{
+    if (!header().is_proof_of_dpos())
+        return ec_compressed();
+
+    BITCOIN_ASSERT(slab_);
+    const auto memory = REMAP_ADDRESS(slab_);
+
+    const auto offset = header_size + height_size + count_size;
+    const auto first = memory + offset + transaction_count() * hash_size + ec_signature_size;
+    auto deserial = make_deserializer_unsafe(first);
+    return deserial.read_bytes<ec_compressed_size>();
 }
 
 } // namespace database

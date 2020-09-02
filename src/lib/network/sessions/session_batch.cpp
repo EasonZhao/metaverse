@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -76,16 +76,25 @@ void session_batch::converge(const code& ec, channel::ptr channel,
     {
         // If the last connection attempt is an error, normalize the code.
         auto result = ec ? error::operation_failed : error::success;
-        if (ec == (code)error::not_satisfied)
-        {
-        	result = error::not_satisfied;
-        }
         handler(result, channel);
     }
 }
 
 // Connect sequence.
 // ----------------------------------------------------------------------------
+
+// protected:
+void session_batch::connect_seed(connector::ptr connect, channel_handler handler)
+{
+    // synchronizer state.
+    const auto mutex = std::make_shared<upgrade_mutex>();
+    const auto counter = std::make_shared<atomic_counter>(0);
+    const auto singular = BIND5(converge, _1, _2, counter, mutex, handler);
+
+    for (uint32_t host = 0; host < batch_size_; ++host) {
+        new_connect(connect, counter, singular, true);
+    }
+}
 
 // protected:
 void session_batch::connect(connector::ptr connect, channel_handler handler)
@@ -96,11 +105,11 @@ void session_batch::connect(connector::ptr connect, channel_handler handler)
     const auto singular = BIND5(converge, _1, _2, counter, mutex, handler);
 
     for (uint32_t host = 0; host < batch_size_; ++host)
-        new_connect(connect, counter, singular);
+        new_connect(connect, counter, singular, false);
 }
 
 void session_batch::new_connect(connector::ptr connect,
-    atomic_counter_ptr counter, channel_handler handler)
+    atomic_counter_ptr counter, channel_handler handler, bool only_seed)
 {
     if (stopped())
     {
@@ -111,20 +120,31 @@ void session_batch::new_connect(connector::ptr connect,
 
     if (counter->load() == batch_size_)
         return;
-    fetch_address(BIND5(start_connect, _1, _2, connect, counter, handler));
+
+    if (only_seed) {
+        fetch_seed_address(BIND5(start_connect, _1, _2, connect, counter, handler));
+    }
+    else {
+        fetch_address(BIND5(start_connect, _1, _2, connect, counter, handler));
+    }
 }
 
 void session_batch::start_connect(const code& ec, const authority& host,
     connector::ptr connect, atomic_counter_ptr counter, channel_handler handler)
 {
-    if (counter->load() == batch_size_ || ec == (code)error::service_stopped)
+    if (stopped(ec))
+        return;
+
+    if (counter->load() == batch_size_)
         return;
 
     // This termination prevents a tight loop in the empty address pool case.
     if (ec)
     {
-        log::warning(LOG_NETWORK)
-            << "Failure fetching new address: ";// << ec.message();
+        if (ec.value() != error::not_found) {
+            log::warning(LOG_NETWORK)
+                << "Failure fetching new address: " << ec.message();
+        }
         handler(ec, nullptr);
         return;
     }
@@ -132,8 +152,6 @@ void session_batch::start_connect(const code& ec, const authority& host,
     // This creates a tight loop in the case of a small address pool.
     if (blacklisted(host))
     {
-//        log::warning(LOG_NETWORK)
-//            << "Fetched blacklisted address [" << host << "] ";
         handler(error::address_blocked, nullptr);
         return;
     }
@@ -158,29 +176,16 @@ void session_batch::handle_connect(const code& ec, channel::ptr channel,
         log::trace(LOG_NETWORK)
             << "Failure connecting to [" << host << "] " << count << ","
             << ec.message();
-#if 0
-        if(count)
-        {
-        	connect->connect(host, BIND7(handle_connect, _1, _2, host, connect,
-        			counter, --count, handler));
-        	return;
-        }
-        else{
-        	remove(host.to_network_address(), [&host](const code& ec){
-        		if(ec)
-				{
-        			log::debug(LOG_NETWORK) << "remove host " << host << " failed," << ec.message() ;
-				}
-        		log::debug(LOG_NETWORK) << "remove host failed," << ec.message() ;
-        	});
-        }
-#endif
-        handler(ec, nullptr);
+        if (ec.value() == error::channel_timeout) // if connect is not aviliable, change it into inactive state
+            remove(host.to_network_address(), [](const code&){});
+        handler(ec, channel);
         return;
     }
 
+    store(host.to_network_address());
+
     log::trace(LOG_NETWORK)
-        << "Connected to [" << channel->authority() << "]";
+        << "Connected to [" << host << "]";
 
     // This is the end of the connect sequence.
     handler(error::success, channel);

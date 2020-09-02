@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -22,6 +22,7 @@
 #define MVS_SERVER_SERVER_NODE_HPP
 
 #include <cstdint>
+#include <atomic>
 #include <memory>
 #include <metaverse/node.hpp>
 #include <metaverse/protocol.hpp>
@@ -41,7 +42,8 @@
 #include <boost/shared_ptr.hpp>
 
 namespace mgbubble{
-    class RestServ;
+    class HttpServ;
+    class WsPushServ;
 }
 namespace libbitcoin {
 namespace server {
@@ -62,6 +64,9 @@ public:
 
     /// Ensure all threads are coalesced.
     virtual ~server_node();
+
+    /// Invoke startup and seeding sequence, call from constructing thread.
+    void start(result_handler handler) override;
 
     // Properties.
     // ----------------------------------------------------------------------------
@@ -103,6 +108,10 @@ public:
     /// Get miner.
     virtual consensus::miner& miner();
 
+    virtual bool is_use_testnet_rules() const override;
+
+    bool is_blockchain_sync() const { return under_blockchain_sync_.load(std::memory_order_relaxed); }
+
 private:
     void handle_running(const code& ec, result_handler handler);
 
@@ -114,12 +123,16 @@ private:
     bool start_transaction_services();
     bool start_query_workers(bool secure);
 
+    bool open_ui();
+
+    std::atomic<bool> under_blockchain_sync_;
+
     const configuration& configuration_;
     static boost::filesystem::path webpage_path_;
-    // modify.chenhao
-    void run_mongoose();
+
     consensus::miner miner_;
-    boost::shared_ptr<mgbubble::RestServ> rest_server_;
+    boost::shared_ptr<mgbubble::HttpServ> rest_server_;
+    boost::shared_ptr<mgbubble::WsPushServ> push_server_;
     // These are thread safe.
     authenticator authenticator_;
     query_service secure_query_service_;

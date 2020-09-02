@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -26,7 +26,7 @@
 #include <metaverse/explorer/callback_state.hpp>
 #include <metaverse/explorer/define.hpp>
 #include <metaverse/explorer/display.hpp>
-#include <metaverse/explorer/prop_tree.hpp>
+#include <metaverse/explorer/json_helper.hpp>
 
 
 namespace libbitcoin {
@@ -36,12 +36,12 @@ using namespace bc::chain;
 using namespace bc::client;
 using namespace bc::explorer::config;
 
-// When you restore your wallet, you should use fetch_history(). 
-// But for updating the wallet, use the [new] scan() method- 
+// When you restore your wallet, you should use fetch_history().
+// But for updating the wallet, use the [new] scan() method-
 // which is faster because you avoid pulling the entire history.
 // We can eventually increase privacy and performance (fewer calls to scan())
-// by 'mining' addresses with the same prefix, allowing us to fetch the 
-// prefix group. Obelisk will eventually support privacy enhanced history for 
+// by 'mining' addresses with the same prefix, allowing us to fetch the
+// prefix group. Obelisk will eventually support privacy enhanced history for
 // address scan by prefix.
 console_result fetch_history::invoke(std::ostream& output, std::ostream& error)
 {
@@ -63,9 +63,9 @@ console_result fetch_history::invoke(std::ostream& output, std::ostream& error)
     // This enables json-style array formatting.
     const auto json = encoding == encoding_engine::json;
 
-    auto on_done = [&state, &address, json](const history::list& rows)
+    auto on_done = [&state, json](const history::list& rows)
     {
-        state.output(prop_tree(rows, json));
+        state.output(json_helper().prop_tree(rows, json));
     };
 
     auto on_error = [&state](const code& error)
@@ -82,6 +82,6 @@ console_result fetch_history::invoke(std::ostream& output, std::ostream& error)
     return state.get_result();
 }
 
-} //namespace commands 
-} //namespace explorer 
-} //namespace libbitcoin 
+} //namespace commands
+} //namespace explorer
+} //namespace libbitcoin

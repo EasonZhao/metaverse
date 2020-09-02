@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -85,6 +85,11 @@ void session::fetch_address(host_handler handler)
     network_.fetch_address(network_.authority_list(), handler);
 }
 
+void session::fetch_seed_address(host_handler handler)
+{
+    network_.fetch_seed_address(network_.authority_list(), handler);
+}
+
 // protected:
 void session::connection_count(count_handler handler)
 {
@@ -94,15 +99,27 @@ void session::connection_count(count_handler handler)
 // protected:
 bool session::blacklisted(const authority& authority) const
 {
+    if (authority == settings_.self) {
+        return true;
+    }
     const auto& blocked = settings_.blacklists;
-    const auto it = std::find(blocked.begin(), blocked.end(), authority);
+    // black through IP, does not care port.
+    const auto it = std::find_if(blocked.begin(), blocked.end(),
+        [&authority](const config::authority& elem){
+            return (authority.ip() == elem.ip());
+        });
     auto result = it != blocked.end();
-    return result ? true : channel::blacklisted(authority);
+    return result || channel::blacklisted(authority) || channel::manualbanned(authority);
 }
 
 void session::remove(const message::network_address& address, result_handler handler)
 {
-	network_.remove(address, handler);
+    network_.remove(address, handler);
+}
+
+void session::store(const message::network_address& address)
+{
+    network_.store(address, [](const code&){});
 }
 
 // Socket creators.
@@ -164,6 +181,11 @@ void session::do_stop_session(const code&)
 bool session::stopped() const
 {
     return stopped_;
+}
+
+bool session::stopped(const code& ec) const
+{
+    return stopped() || ec.value() == error::service_stopped;
 }
 
 // Subscribe Stop sequence.
@@ -261,7 +283,7 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
         return;
     }
 
-    truth_handler handler = 
+    truth_handler handler =
         BIND_3(handle_is_pending, _1, channel, handle_started);
 
     // The loopback test is for incoming channels only.

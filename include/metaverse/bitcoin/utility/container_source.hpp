@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -55,7 +55,7 @@ public:
             return -1;
 
         const auto value = static_cast<typename Container::size_type>(result);
-        DEBUG_ONLY(const auto maximum = 
+        DEBUG_ONLY(const auto maximum =
             std::numeric_limits<typename Container::size_type>::max());
         BITCOIN_ASSERT(value < maximum);
         BITCOIN_ASSERT(position_ + value < maximum);

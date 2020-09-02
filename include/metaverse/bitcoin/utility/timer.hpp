@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -31,7 +31,7 @@ namespace libbitcoin {
 // From: github.com/picanumber/bureaucrat/blob/master/time_lapse.h
 
 /// Class to measure the execution time of a callable.
-template <typename Time = asio::milliseconds, class Clock=asio::steady_clock> 
+template <typename Time = asio::milliseconds, class Clock=asio::steady_clock>
 struct timer
 {
     /// Returns the quantity (count) of the elapsed time as TimeT units.

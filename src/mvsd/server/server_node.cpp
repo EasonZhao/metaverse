@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -28,7 +28,15 @@
 #include <metaverse/server/messages/route.hpp>
 #include <metaverse/server/workers/query_worker.hpp>
 #include <metaverse/mgbubble.hpp>
+#include <metaverse/consensus/witness.hpp>
+
 #include <thread>
+
+#ifdef _WIN32
+#include <tchar.h>
+#include <windows.h>
+#include <shellapi.h>
+#endif
 
 namespace libbitcoin {
 namespace server {
@@ -40,6 +48,7 @@ using namespace bc::protocol;
 
 server_node::server_node(const configuration& configuration)
   : p2p_node(configuration),
+    under_blockchain_sync_(true),
     configuration_(configuration),
     authenticator_(*this),
     secure_query_service_(authenticator_, *this, true),
@@ -53,8 +62,10 @@ server_node::server_node(const configuration& configuration)
     secure_notification_worker_(authenticator_, *this, true),
     public_notification_worker_(authenticator_, *this, false),
     miner_(*this),
-	rest_server_(new mgbubble::RestServ(webpage_path_.string().data(), *this))
+    rest_server_(new mgbubble::HttpServ(webpage_path_.string().data(), *this, configuration.server.mongoose_listen)),
+    push_server_(new mgbubble::WsPushServ(*this, configuration.server.websocket_listen))
 {
+    consensus::witness::create(*this);
 }
 
 // This allows for shutdown based on destruct without need to call stop.
@@ -71,31 +82,34 @@ const settings& server_node::server_settings() const
     return configuration_.server;
 }
 
-void server_node::run_mongoose()
+bool server_node::is_use_testnet_rules() const
 {
-    try
+    return configuration_.use_testnet_rules;
+}
+
+void server_node::start(result_handler handler)
+{
+    if (!stopped())
     {
-        // bind
-        auto& conn = rest_server_->bind(configuration_.server.mongoose_listen.c_str());
-
-        // init for websocket and seesion control
-        mg_set_protocol_http_websocket(&conn);
-        mg_set_timer(&conn, mg_time() + mgbubble::RestServ::session_check_interval);
-
-#if 0   // not use session control
-        mg_register_http_endpoint(&conn, "/login.html", &mgbubble::RestServ::login_handler);
-        mg_register_http_endpoint(&conn, "/logout", &mgbubble::RestServ::logout_handler);
-#endif
+        handler(error::operation_failed);
+        return;
     }
-    catch(const std::exception& e)
+
+    p2p_node::start(handler);
+
+    if (!rest_server_->start() || !push_server_->start())
     {
-        throw std::runtime_error("can not listen on " + configuration_.server.mongoose_listen);
+        log::error(LOG_SERVER) << "Http/Websocket server can not start.";
+        handler(error::operation_failed);
+        return;
     }
-    log::info(LOG_SERVER) << "http server listen on (" << configuration_.server.mongoose_listen << ")";;
 
-    // run
-    for (;;)
-        rest_server_->poll(1000);
+    if (!consensus::witness::get().init_witness_list())
+    {
+        log::error(LOG_SERVER) << "init witness list failed.";
+        handler(error::witness_update_error);
+        return;
+    }
 }
 
 // Run sequence.
@@ -126,7 +140,7 @@ void server_node::handle_running(const code& ec, result_handler handler)
     if (ec)
     {
         handler(ec);
-    return;
+        return;
     }
 
     if (!start_services())
@@ -134,8 +148,8 @@ void server_node::handle_running(const code& ec, result_handler handler)
         handler(error::operation_failed);
         return;
     }
-    std::thread httpserver(std::bind(&server_node::run_mongoose, this));
-    httpserver.detach();
+
+    under_blockchain_sync_.store(false, std::memory_order_relaxed);
 
     // This is the end of the derived run sequence.
     handler(error::success);
@@ -160,7 +174,7 @@ bool server_node::close()
 /// Get miner.
 consensus::miner& server_node::miner()
 {
-	return miner_;
+    return miner_;
 }
 
 // Notification.
@@ -234,7 +248,7 @@ bool server_node::start_query_services()
         (settings.subscription_limit > 0 && !public_notification_worker_.start()) ||
         !start_query_workers(false)))
             return false;
-    
+
     return true;
 }
 
@@ -310,6 +324,22 @@ bool server_node::start_query_workers(bool secure)
         subscribe_stop([=](const code&) { worker->stop(); });
     }
 
+    return true;
+}
+
+bool server_node::open_ui()
+{
+#ifdef _WIN32
+    const TCHAR szOperation[] = _T("open");
+    const TCHAR szAddress[] = _T("http://127.0.0.1:8820");
+    HINSTANCE hRslt = ShellExecute(NULL, szOperation,
+        szAddress, NULL, NULL, SW_SHOWNORMAL);
+
+    if (hRslt <= (HINSTANCE)HINSTANCE_ERROR)
+        log::error("shell execute failed when open UI");
+        return false;
+    log::info("UI on display");
+#endif
     return true;
 }
 

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -58,6 +58,7 @@ public:
      * @param[in]  other  The object to copy into self on construct.
      */
     base2(const base2& other);
+    base2& operator=(const base2& other) = default;
 
     /**
      * Get number of bits in value.

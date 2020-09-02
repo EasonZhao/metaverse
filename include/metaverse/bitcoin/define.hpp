@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -78,7 +78,7 @@ namespace mvs = libbitcoin; // for mvs
 // Log name.
 #define LOG_SYSTEM "system"
 
-// Avoid namespace conflict between boost::placeholders and std::placeholders. 
+// Avoid namespace conflict between boost::placeholders and std::placeholders.
 #define BOOST_BIND_NO_PLACEHOLDERS
 
 // Define so we can have better visibility of lcov exclusion ranges.

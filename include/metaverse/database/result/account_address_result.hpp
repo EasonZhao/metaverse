@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -28,11 +28,9 @@
 #include <metaverse/database/result/base_result.hpp>
 #include <metaverse/bitcoin/chain/attachment/account/account_address.hpp>
 
-using namespace libbitcoin::chain;
-
 namespace libbitcoin {
 namespace database {
-    
+
 /// read account_address detail information from account_address database.
 class BCD_API account_address_result : public base_result
 {
@@ -40,7 +38,7 @@ public:
     account_address_result(const memory_ptr slab);
 
     /// The account_address.
-	std::shared_ptr<account_address> get_account_address_detail() const;
+    std::shared_ptr<chain::account_address> get_account_address_detail() const;
 };
 
 } // namespace database

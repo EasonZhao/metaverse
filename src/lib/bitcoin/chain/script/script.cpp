@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -27,6 +27,7 @@
 #include <metaverse/bitcoin/constants.hpp>
 #include <metaverse/bitcoin/chain/script/operation.hpp>
 #include <metaverse/bitcoin/chain/transaction.hpp>
+#include <metaverse/bitcoin/chain/attachment/asset/attenuation_model.hpp>
 #include <metaverse/bitcoin/formats/base_16.hpp>
 #include <metaverse/bitcoin/math/elliptic_curve.hpp>
 #include <metaverse/bitcoin/math/hash.hpp>
@@ -112,6 +113,15 @@ script_pattern script::pattern() const
 
     if (operation::is_sign_script_hash_pattern(operations))
         return script_pattern::sign_script_hash;
+
+    if (operation::is_pay_blackhole_pattern(operations))
+        return script_pattern::pay_blackhole_address;
+
+    if (operation::is_pay_key_hash_with_attenuation_model_pattern(operations))
+        return script_pattern::pay_key_hash_with_attenuation_model;
+
+    if (operation::is_pay_key_hash_with_sequence_lock_pattern(operations))
+        return script_pattern::pay_key_hash_with_sequence_lock;
 
     return script_pattern::non_standard;
 }
@@ -228,7 +238,7 @@ uint64_t script::satoshi_content_size() const
     {
         return operations[0].serialized_size();
     }
-    
+
     const auto value = [](uint64_t total, const operation& op)
     {
         return total + op.serialized_size();
@@ -301,6 +311,8 @@ bool script::from_string(const std::string& human_readable)
 
 std::string script::to_string(uint32_t flags) const
 {
+    flags = chain::get_script_context();
+
     std::ostringstream value;
 
     for (auto it = operations.begin(); it != operations.end(); ++it)
@@ -1339,7 +1351,7 @@ signature_parse_result op_checkmultisigverify(evaluation_context& context,
             script_code.operations.push_back(*it);
 
     // The exact number of signatures are required and must be in order.
-    // One key can validate more than one script. So we always advance 
+    // One key can validate more than one script. So we always advance
     // until we exhaust either pubkeys (fail) or signatures (pass).
     auto pubkey_iterator = pubkeys.begin();
 
@@ -1432,6 +1444,53 @@ bool op_checklocktimeverify(evaluation_context& context, const script& script,
 
     // BIP65: the stack lock-time type differs from that of tx nLockTime.
     return is_locktime_type_match(stack, transaction);
+}
+
+bool op_checksequenceverify(evaluation_context& context, const script& script,
+    const transaction& parent_tx, uint32_t input_index)
+{
+    if (input_index >= parent_tx.inputs.size())
+        return false;
+
+    if (context.stack.empty())
+        return false;
+
+    // nSequence, like nLockTime, is a 32-bit unsigned integer
+    // field. See the comment in CHECKLOCKTIMEVERIFY regarding
+    // 5-byte numeric operands.
+    script_number number;
+    if (!number.set_data(context.pop_stack(), csv_max_script_number_size))
+        return false;
+
+    // In the rare event that the argument may be < 0 due to
+    // some arithmetic being done first, you can always use
+    // 0 MAX CHECKSEQUENCEVERIFY.
+    if (number < 0)
+        return false;
+
+    // To provide for future soft-fork extensibility, if the
+    // operand has the disabled lock-time flag set,
+    // CHECKSEQUENCEVERIFY behaves as a NOP.
+    if ((number.int64() & relative_locktime_disabled) != 0)
+        return false;
+
+    return true;
+}
+
+bool op_checkattenuationverify(evaluation_context& context, const script& script,
+    const transaction& parent_tx, uint32_t input_index)
+{
+    if (input_index >= parent_tx.inputs.size())
+        return false;
+
+    if (context.stack.empty())
+        return false;
+
+    auto model_param = context.pop_stack();
+    if (!attenuation_model::check_model_param_format(model_param))
+        return false;
+
+    return true;
 }
 
 // Test flags for a given context.
@@ -1712,16 +1771,17 @@ bool run_operation(const operation& op, const transaction& parent_tx,
 
         case opcode::checklocktimeverify:
             return script::is_active(context.flags, script_context::bip65_enabled) ?
-                op_checklocktimeverify(context, script, parent_tx,
-                    input_index) : true;
+                op_checklocktimeverify(context, script, parent_tx, input_index) : true;
+
+        case opcode::checkattenuationverify:
+            return script::is_active(context.flags, script_context::attenuation_enabled) ?
+                op_checkattenuationverify(context, script, parent_tx, input_index) : true;
+
+        case opcode::checksequenceverify:
+            return script::is_active(context.flags, script_context::bip112_enabled) ?
+                op_checksequenceverify(context, script, parent_tx, input_index) : true;
 
         case opcode::op_nop1:
-
-        // op_nop2 has been consumed by checklocktimeverify
-        ////case opcode::op_nop2:
-
-        case opcode::op_nop3:
-        case opcode::op_nop4:
         case opcode::op_nop5:
         case opcode::op_nop6:
         case opcode::op_nop7:
@@ -1816,7 +1876,7 @@ bool next_step(const transaction& parent_tx, uint32_t input_index,
 
     if (opcode_is_disabled(op.code))
         return false;
-    
+
     if (!context.conditional.succeeded() && !is_condition_opcode(op.code))
         return true;
 

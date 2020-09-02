@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2015 libbitcoin developers (see COPYING).
+// Copyright (c) 2014-2020 libbitcoin developers (see COPYING).
 //
 //        GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 //
@@ -12,9 +12,6 @@
  * For interpretation of the versioning scheme see: http://semver.org
  */
 
-#define MVS_VERSION "0.6.9"
-#define MVS_MAJOR_VERSION 0
-#define MVS_MINOR_VERSION 6
-#define MVS_PATCH_VERSION 8
+#define MVS_VERSION "0.9.1"
 
 #endif

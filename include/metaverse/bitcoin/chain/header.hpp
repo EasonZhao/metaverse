@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -39,6 +39,7 @@
 #include <metaverse/consensus/libdevcore/Common.h>
 #include <metaverse/consensus/libdevcore/RLP.h>
 #include <metaverse/consensus/libdevcore/SHA3.h>
+#include <metaverse/bitcoin/base_primary.hpp>
 
 namespace libbitcoin {
     using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;
@@ -48,19 +49,23 @@ namespace libbitcoin {
 
 namespace chain {
 
+enum block_version {
+    block_version_any = 0,
+    block_version_min = 1,
+    block_version_pow = 1,
+    block_version_pos = 2,
+    block_version_dpos = 3,
+    block_version_max = 4
+};
+
 class BC_API header
+    : public base_primary<header>
 {
 public:
     typedef std::vector<header> list;
     typedef std::shared_ptr<header> ptr;
     typedef std::vector<ptr> ptr_list;
 
-    static header factory_from_data(const data_chunk& data,
-        bool with_transaction_count = true);
-    static header factory_from_data(std::istream& stream,
-        bool with_transaction_count = true);
-    static header factory_from_data(reader& source,
-        bool with_transaction_count = true);
     static uint64_t satoshi_fixed_size_without_transaction_count();
 
     header();
@@ -80,16 +85,16 @@ public:
     // TODO: eliminate blockchain transaction copies and then delete this.
     header& operator=(const header& other) /*= delete*/;
 
-    bool from_data(const data_chunk& data, bool with_transaction_count = true);
-    bool from_data(std::istream& stream, bool with_transaction_count = true);
-    bool from_data(reader& source, bool with_transaction_count = true);
-    data_chunk to_data(bool with_transaction_count = true) const;
-    void to_data(std::ostream& stream, bool with_transaction_count = true) const;
-    void to_data(writer& sink, bool with_transaction_count = true) const;
+    bool from_data_t(reader& source, bool with_transaction_count = true);
+    void to_data_t(writer& sink, bool with_transaction_count = true) const;
     hash_digest hash() const;
     bool is_valid() const;
     void reset();
     uint64_t serialized_size(bool with_transaction_count = true) const;
+
+    bool is_proof_of_stake() const;
+    bool is_proof_of_work() const;
+    bool is_proof_of_dpos() const;
 
     uint32_t version;
     hash_digest previous_block_hash;
@@ -111,6 +116,11 @@ private:
 
 BC_API bool operator==(const header& left, const header& right);
 BC_API bool operator!=(const header& left, const header& right);
+
+
+std::string get_block_version(const header& header);
+std::string get_block_version(block_version version);
+std::string get_block_version(uint32_t version);
 
 } // namespace chain
 } // namespace libbitcoin

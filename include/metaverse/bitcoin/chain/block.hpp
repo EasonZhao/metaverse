@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -32,11 +32,13 @@
 #include <metaverse/bitcoin/utility/data.hpp>
 #include <metaverse/bitcoin/utility/reader.hpp>
 #include <metaverse/bitcoin/utility/writer.hpp>
+#include <metaverse/bitcoin/base_primary.hpp>
 
 namespace libbitcoin {
 namespace chain {
 
 class BC_API block
+    : public base_primary<block>
 {
 public:
     typedef std::vector<block> list;
@@ -44,12 +46,6 @@ public:
     typedef std::vector<ptr> ptr_list;
     typedef std::vector<size_t> indexes;
 
-    static block factory_from_data(const data_chunk& data,
-        bool with_transaction_count = true);
-    static block factory_from_data(std::istream& stream,
-        bool with_transaction_count = true);
-    static block factory_from_data(reader& source,
-        bool with_transaction_count = true);
     static hash_digest generate_merkle_root(
         const transaction::list& transactions);
     static block genesis_mainnet();
@@ -58,28 +54,34 @@ public:
     block();
     block(const block& other);
     block(const chain::header& header,
-        const chain::transaction::list& transactions);
+        const chain::transaction::list& transactions,
+        const ec_signature& blocksig={},
+        const ec_compressed& pubkey={});
 
     block(block&& other);
     block(chain::header&& header,
-        chain::transaction::list&& transactions);
+        chain::transaction::list&& transactions,
+        ec_signature&& blocksig={},
+        ec_compressed&& pubkey={});
 
     /// This class is move assignable but not copy assignable.
     block& operator=(block&& other);
     void operator=(const block&) = delete;
 
-    bool from_data(const data_chunk& data, bool with_transaction_count = true);
-    bool from_data(std::istream& stream, bool with_transaction_count = true);
-    bool from_data(reader& source, bool with_transaction_count = true);
-    data_chunk to_data(bool with_transaction_count = true) const;
-    void to_data(std::ostream& stream, bool with_transaction_count = true) const;
-    void to_data(writer& sink, bool with_transaction_count = true) const;
+    bool from_data_t(reader& source, bool with_transaction_count = true);
+    void to_data_t(writer& sink, bool with_transaction_count = true) const;
     bool is_valid() const;
     void reset();
     uint64_t serialized_size(bool with_transaction_count = true) const;
+    bool is_proof_of_stake() const;
+    bool is_proof_of_work() const;
+    bool is_proof_of_dpos() const;
 
     chain::header header;
     transaction::list transactions;
+
+    ec_signature blocksig; // pos/dpos block only
+    ec_compressed public_key; // dpos block only
 };
 
 } // namespace chain

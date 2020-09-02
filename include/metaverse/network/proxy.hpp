@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -51,14 +51,14 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef resubscriber<const code&, const std::string&, const_buffer,
         result_handler> send_subscriber;
-    using RequestCallback = std::function<void()>;
+    using request_callback = std::function<void()>;
 
     /// Construct an instance.
     proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
         uint32_t protocol_version);
 
     /// Validate proxy stopped.
-    ~proxy();
+    virtual ~proxy();
 
     /// This class is not copyable.
     proxy(const proxy&) = delete;
@@ -93,6 +93,8 @@ public:
     /// Save the p2p protocol version object of the peer.
     virtual void set_version(message::version::ptr value);
 
+    uint32_t peer_start_height() { return peer_version_message_.load() ? peer_version_message_.load()->start_height : 0; }
+
     /// Read messages from this socket.
     virtual void start(result_handler handler);
 
@@ -101,18 +103,17 @@ public:
 
     void dispatch();
 
-    void clear_request() {
-    	scoped_lock lock{mutex_};
-    	std::queue<RequestCallback>{}.swap(pendingRequests_);
-    	processing_.store(false);
-    }
-
     static bool blacklisted(const config::authority&);
+    static bool manualbanned(const config::authority& authority);
+    static void manual_ban(const config::authority&);
+    static void manual_unban(const config::authority&);
+    static std::map<config::authority, int64_t> get_banned();
+    static std::list<config::authority> get_manual_banned();
 
     virtual bool misbehaving(int32_t howmuch);
 
-protected:
     virtual bool stopped() const;
+protected:
     virtual void handle_activity() = 0;
     virtual void handle_stopping() = 0;
 
@@ -156,15 +157,15 @@ private:
     bc::atomic<message::version::ptr> peer_version_message_;
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
-    std::queue<RequestCallback> pendingRequests_;
-    std::atomic_bool processing_;
-    unique_mutex mutex_;
-    std::queue<RequestCallback> outbound_queue_;
+    std::queue<request_callback> outbound_queue_;
     std::atomic_bool has_sent_;
 
     std::atomic_int misbehaving_;
-	static boost::detail::spinlock spinlock_;
-	static std::map<config::authority, int64_t> banned_;
+    static boost::detail::spinlock spinlock_;
+    static std::map<config::authority, int64_t> banned_;
+
+    static boost::detail::spinlock manual_banned_spinlock_;
+    static std::list<config::authority> manual_banned_;
 };
 
 } // namespace network

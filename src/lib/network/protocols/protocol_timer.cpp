@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -56,7 +56,7 @@ void protocol_timer::start(const asio::duration& timeout,
 
 void protocol_timer::handle_notify(const code& ec, event_handler handler)
 {
-    if (ec == (code)error::channel_stopped)
+    if (ec.value() == error::channel_stopped)
         timer_->stop();
 
     handler(ec);
@@ -72,18 +72,19 @@ void protocol_timer::reset_timer()
         return;
 
     timer_->start(BIND1(handle_timer, _1));
+    if (stopped())
+    {
+        timer_->stop();
+        return;
+    }
 }
 
 void protocol_timer::handle_timer(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
         return;
-
-#if 0 //huge log genareted here
-    log::trace(LOG_NETWORK)
-        << "Fired protocol_" << name() << " timer on [" << authority() << "] "
-        << ec.message();
-#endif
+    }
 
     // The handler completes before the timer is reset.
     set_event(error::channel_timeout);

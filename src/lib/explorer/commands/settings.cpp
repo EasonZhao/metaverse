@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -23,7 +23,8 @@
 #include <iostream>
 #include <map>
 #include <metaverse/network.hpp>
-#include <metaverse/explorer/prop_tree.hpp>
+#include <metaverse/explorer/commands/settings.hpp>
+#include <metaverse/explorer/json_helper.hpp>
 #include <metaverse/explorer/utility.hpp>
 
 
@@ -31,7 +32,6 @@ namespace libbitcoin {
 namespace explorer {
 namespace commands {
 using namespace bc::explorer::config;
-using namespace pt;
 
 console_result commands::settings::invoke(std::ostream& output,
     std::ostream& error)
@@ -64,15 +64,15 @@ console_result commands::settings::invoke(std::ostream& output,
         serialize(get_network_identifier_setting());
     list["network.connect_retries"] =
         serialize(get_network_connect_retries_setting());
-    list["network.connect_timeout_seconds"] = 
+    list["network.connect_timeout_seconds"] =
         serialize(get_network_connect_timeout_seconds_setting());
     list["network.channel_handshake_seconds"] =
         serialize(get_network_channel_handshake_seconds_setting());
     list["network.hosts_file"] =
         get_network_hosts_file_setting().string();
-    list["network.debug_file"] = 
+    list["network.debug_file"] =
         get_network_debug_file_setting().string();
-    list["network.error_file"] = 
+    list["network.error_file"] =
         get_network_error_file_setting().string();
 
     network::settings settings(bc::settings::mainnet);
@@ -94,13 +94,13 @@ console_result commands::settings::invoke(std::ostream& output,
         serialize(get_server_connect_timeout_seconds_setting());
     list["server.server_public_key"] =
         serialize(get_server_server_public_key_setting());
-    list["server.client_private_key"] = 
+    list["server.client_private_key"] =
         serialize(get_server_client_private_key_setting());
 
-    write_stream(output, prop_tree(list), encoding);
+    write_stream(output, json_helper().prop_tree(list), encoding);
     return console_result::okay;
 }
 
-} //namespace commands 
-} //namespace explorer 
-} //namespace libbitcoin 
+} //namespace commands
+} //namespace explorer
+} //namespace libbitcoin

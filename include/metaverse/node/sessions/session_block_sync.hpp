@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -45,7 +45,7 @@ public:
     session_block_sync(network::p2p& network, header_queue& hashes,
         blockchain::simple_chain& chain, const settings& settings);
 
-    virtual void start(result_handler handler);
+    virtual void start(result_handler handler) override;
 
 protected:
     /// Overridden to attach and start specialized handshake.

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -41,7 +41,7 @@ static bool decode_signature(wallet::message_signature& signature,
 {
     // There is no bc::decode_base64 array-based override.
     data_chunk decoded;
-    if (!decode_base64(decoded, encoded) || 
+    if (!decode_base64(decoded, encoded) ||
         (decoded.size() != wallet::message_signature_size))
         return false;
 

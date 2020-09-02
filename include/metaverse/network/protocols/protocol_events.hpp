@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -54,7 +54,7 @@ protected:
      * The event handler may be invoked one or more times.
      * @param[in]  handler  The handler to call at each completion event.
      */
-    virtual void start(event_handler handler);
+    void start(event_handler handler);
 
     /**
      * Invoke the event handler.
@@ -65,7 +65,12 @@ protected:
     /**
      * Determine if the event handler has been cleared.
      */
-    virtual bool stopped();
+    virtual bool stopped() const;
+
+    /**
+     * Determine if the code is a stop code or the handler has been cleared.
+     */
+    virtual bool stopped(const code& ec) const;
 
 protected:
     void handle_send(const code& ec, const std::string& command);

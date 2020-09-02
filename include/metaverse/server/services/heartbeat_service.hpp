@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -51,7 +51,7 @@ protected:
     virtual bool unbind(socket& publisher);
 
     // Implement the service.
-    virtual void work();
+    virtual void work() override;
 
     // Publish the heartbeat (integrated worker).
     void publish(uint32_t count, socket& socket);

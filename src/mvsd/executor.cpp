@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -31,6 +31,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <metaverse/server.hpp>
+#include <metaverse/macros_define.hpp>
 #include <metaverse/bitcoin/utility/backtrace.hpp>
 #include <metaverse/bitcoin/utility/path.hpp>
 
@@ -58,9 +59,10 @@ executor::executor(parser& metadata, std::istream& input,
     debug_file_((default_data_path() / metadata_.configured.network.debug_file).string(), append),
     error_file_((default_data_path() / metadata_.configured.network.error_file).string(), append)
 {
-    initialize_logging(debug_file_, error_file_, output, error);
+    initialize_logging(debug_file_, error_file_, output, error, metadata_.configured.server.log_level);
     handle_stop(initialize_stop);
 }
+
 
 // Command line options.
 // ----------------------------------------------------------------------------
@@ -85,7 +87,7 @@ void executor::do_settings()
 void executor::do_version()
 {
     output_ << format(BS_VERSION_MESSAGE) %
-        MVS_SERVER_VERSION %
+        MVS_VERSION %
         MVS_SERVER_VERSION %
         MVS_PROTOCOL_VERSION %
         MVS_NODE_VERSION %
@@ -95,22 +97,29 @@ void executor::do_version()
 
 void executor::set_admin()
 {
-	data_base db(metadata_.configured.database);
-	db.start();
-	db.set_admin("administerator", "mvsgo");
-	db.stop();
+    data_base db(metadata_.configured.database);
+    db.start();
+    db.set_admin("administerator", "mvsgo");
+    db.stop();
+}
+
+void executor::set_blackhole_did()
+{
+    data_base db(metadata_.configured.database);
+    db.start();
+    db.set_blackhole_did();
+    db.stop();
 }
 
 // Emit to the log.
 bool executor::do_initchain()
 {
     initialize_output();
-    
+
     boost::system::error_code ec;
 
-    auto home_path = default_data_path();
     const auto& directory = metadata_.configured.database.directory;
-    auto data_path = home_path / directory;
+    const auto& data_path = directory;
 
     if (create_directories(data_path, ec))
     {
@@ -122,33 +131,40 @@ bool executor::do_initchain()
         auto genesis = consensus::miner::create_genesis_block(!metadata_.configured.chain.use_testnet_rules);
 
         const auto result = data_base::initialize(data_path, *genesis);
-        if (! result)
-        	throw std::runtime_error{"initialize chain failed"};
-		// init admin account
-		set_admin();
+        if (!result) {
+            //rm directories
+            remove_all(data_path);
+            throw std::runtime_error{ "initialize chain failed" };
+        }
+        // init admin account
+        set_admin();
+        // init blackhole DID
+        set_blackhole_did();
         log::info(LOG_SERVER) << BS_INITCHAIN_COMPLETE;
         return true;
-    } else {
-    	if(data_base::is_lower_database(data_path)) {
-	        auto genesis = consensus::miner::create_genesis_block(!metadata_.configured.chain.use_testnet_rules);
-	        const auto result = data_base::upgrade_database(metadata_.configured.database, *genesis);
-	        if (! result)
-	        	throw std::runtime_error{"reinitialize blockchain db failed"};
-			// init admin account
-			// set_admin();
-	        log::info(LOG_SERVER) << BS_INITCHAIN_COMPLETE;
-	        return true;
-    	}
-	}
+    }
+    else {
+        if (MVS_DATABASE_VERSION_NUMBER >= 63) {
+            if (!data_base::upgrade_version_63(data_path)) {
+                throw std::runtime_error{ " upgrade database to version 63 failed!" };
+            }
+        }
+
+        if (MVS_DATABASE_VERSION_NUMBER >= 64) {
+            if (!data_base::upgrade_version_64(data_path)) {
+                throw std::runtime_error{ " upgrade database to version 63 failed!" };
+            }
+        }
+    }
 
     if (ec.value() == directory_exists)
     {
         return false;
     }
+
     auto error_info = format(BS_INITCHAIN_NEW) % data_path % ec.message();
     throw std::runtime_error{error_info.str()};
-//    log::error(LOG_SERVER) << format(BS_INITCHAIN_NEW) % data_path % ec.message();
-//    return false;
+    return false;
 }
 
 // Menu selection.
@@ -176,19 +192,36 @@ bool executor::menu()
         return true;
     }
 
-	try
-	{
-		auto result = do_initchain(); // false means no need to initial chain
-	    if (config.initchain)
-	    {
-	    	return result;
-	    }
-	}
-	catch(const std::exception& e){ // initialize failed
-		//log::error(LOG_SERVER) << format(BS_INITCHAIN_EXISTS) % data_path;
-		log::error(LOG_SERVER) << "initialize chain failed," << e.what();
-		return false;
-	}
+    try
+    {
+#ifdef NDEBUG
+        std::string running_mode = " (release mode) ";
+#else
+        std::string running_mode = " (debug mode) ";
+#endif
+        log::info(LOG_SERVER) << "mvsd version " << MVS_VERSION << running_mode;
+        // set block data absolute path
+        const auto& directory = metadata_.configured.database.directory ;
+        if (!directory.is_absolute()) {
+            const auto& home = metadata_.configured.data_dir ;
+            metadata_.configured.database.directory = home / directory ;
+        } else {
+            const auto& default_directory = metadata_.configured.database.default_directory;
+            metadata_.configured.database.directory = directory / default_directory;
+        }
+
+        auto result = do_initchain(); // false means no need to initial chain
+
+        if (config.initchain)
+        {
+            return result;
+        }
+    }
+    catch(const std::exception& e){ // initialize failed
+        //log::error(LOG_SERVER) << format(BS_INITCHAIN_EXISTS) % data_path;
+        log::error(LOG_SERVER) << "initialize chain failed," << e.what();
+        return false;
+    }
 
     // There are no command line arguments, just run the server.
     return run();
@@ -212,6 +245,13 @@ bool executor::run()
     // Now that the directory is verified we can create the node for it.
     node_ = std::make_shared<server_node>(metadata_.configured);
 
+#ifdef PRIVATE_CHAIN
+    log::info(LOG_SERVER) << "running (private net)";
+#else
+    log::info(LOG_SERVER)
+        << (!node_->is_use_testnet_rules() ? "running (mainnet)" : "running (testnet)");
+#endif
+
     // The callback may be returned on the same thread.
     node_->start(
         std::bind(&executor::handle_started,
@@ -234,7 +274,7 @@ bool executor::run()
 // Handle the completion of the start sequence and begin the run sequence.
 void executor::handle_started(const code& ec)
 {
-    if (ec)
+    if (ec && ec.value() != error::operation_failed)
     {
         log::error(LOG_SERVER) << format(BS_NODE_START_FAIL) % ec.message();
         stop(ec);
@@ -259,7 +299,9 @@ void executor::handle_running(const code& ec)
 {
     if (ec)
     {
-        log::info(LOG_SERVER) << format(BS_NODE_START_FAIL) % ec.message();
+        if (ec.value() != error::service_stopped) {
+            log::info(LOG_SERVER) << format(BS_NODE_START_FAIL) % ec.message();
+        }
         stop(ec);
         return;
     }
@@ -288,7 +330,7 @@ void executor::handle_stop(int code)
 
     if(SIGINT != code)
     {
-    	do_backtrace("signal.out");
+        do_backtrace("signal.out");
     }
 
     log::info(LOG_SERVER) << format(BS_NODE_SIGNALED) % code;
@@ -307,11 +349,11 @@ void executor::stop(const code& ec)
 // Set up logging.
 void executor::initialize_output()
 {
-    log::debug(LOG_SERVER) << BS_LOG_HEADER;
+    // log::debug(LOG_SERVER) << BS_LOG_HEADER;
     log::info(LOG_SERVER) << BS_LOG_HEADER;
-    log::warning(LOG_SERVER) << BS_LOG_HEADER;
-    log::error(LOG_SERVER) << BS_LOG_HEADER;
-    log::fatal(LOG_SERVER) << BS_LOG_HEADER;
+    // log::warning(LOG_SERVER) << BS_LOG_HEADER;
+    // log::error(LOG_SERVER) << BS_LOG_HEADER;
+    // log::fatal(LOG_SERVER) << BS_LOG_HEADER;
 
     auto file = default_data_path() / metadata_.configured.file;
 
@@ -325,9 +367,8 @@ void executor::initialize_output()
 bool executor::verify_directory()
 {
     boost::system::error_code ec;
-    auto home_path = default_data_path();
     const auto& directory = metadata_.configured.database.directory;
-    auto data_path = home_path / directory;
+    auto data_path = directory;
 
     if (exists(data_path, ec))
         return true;

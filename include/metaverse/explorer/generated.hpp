@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -25,30 +25,9 @@
 #include <memory>
 #include <string>
 #include <metaverse/explorer/command.hpp>
-#include <metaverse/explorer/commands/seed.hpp>
-#include <metaverse/explorer/commands/ec-to-address.hpp>
-#include <metaverse/explorer/commands/ec-to-public.hpp>
-#include <metaverse/explorer/commands/fetch-balance.hpp>
-#include <metaverse/explorer/commands/fetch-header.hpp>
-#include <metaverse/explorer/commands/fetch-height.hpp>
 #include <metaverse/explorer/commands/fetch-history.hpp>
-#include <metaverse/explorer/commands/fetch-public-key.hpp>
 #include <metaverse/explorer/commands/fetch-stealth.hpp>
-#include <metaverse/explorer/commands/fetch-tx.hpp>
-#include <metaverse/explorer/commands/fetch-tx-index.hpp>
-#include <metaverse/explorer/commands/fetch-utxo.hpp>
-#include <metaverse/explorer/commands/hd-new.hpp>
-#include <metaverse/explorer/commands/hd-private.hpp>
-#include <metaverse/explorer/commands/hd-to-ec.hpp>
-#include <metaverse/explorer/commands/hd-to-public.hpp>
 #include <metaverse/explorer/commands/help.hpp>
-#include <metaverse/explorer/commands/input-set.hpp>
-#include <metaverse/explorer/commands/input-sign.hpp>
-#include <metaverse/explorer/commands/input-validate.hpp>
-#include <metaverse/explorer/commands/mnemonic-decode.hpp>
-#include <metaverse/explorer/commands/mnemonic-encode.hpp>
-#include <metaverse/explorer/commands/mnemonic-new.hpp>
-#include <metaverse/explorer/commands/mnemonic-to-seed.hpp>
 #include <metaverse/explorer/commands/send-tx.hpp>
 #include <metaverse/explorer/commands/settings.hpp>
 #include <metaverse/explorer/commands/stealth-decode.hpp>
@@ -57,8 +36,6 @@
 #include <metaverse/explorer/commands/stealth-secret.hpp>
 #include <metaverse/explorer/commands/stealth-shared.hpp>
 #include <metaverse/explorer/commands/tx-decode.hpp>
-#include <metaverse/explorer/commands/tx-encode.hpp>
-#include <metaverse/explorer/commands/tx-sign.hpp>
 #include <metaverse/explorer/commands/validate-tx.hpp>
 #include <metaverse/explorer/define.hpp>
 
@@ -70,35 +47,35 @@ namespace explorer {
 /**
  * Various shared localizable strings.
  */
-#define BX_COMMANDS_HEADER \
+#define BX_COMMANDS_HEADER                                            \
     "Info: The commands are:"
-#define BX_COMMANDS_HOME_PAGE \
+#define BX_COMMANDS_HOME_PAGE                                         \
     "MVS home page:"
-#define BX_COMMAND_USAGE \
+#define BX_COMMAND_USAGE                                              \
     "Usage: help COMMAND"
-#define BX_CONFIG_DESCRIPTION \
+#define BX_CONFIG_DESCRIPTION                                         \
     "The path to the configuration settings file."
-#define BX_CONNECTION_FAILURE \
-    "{\"error\":\"Could not connect to server: %1%\"}"
-#define BX_DEPRECATED_COMMAND \
-    "{\"error\":\"The '%1%' command has been replaced by '%2%'.\"}"
-#define BX_HELP_DESCRIPTION \
+#define BX_CONNECTION_FAILURE                                         \
+    "Could not connect to server: %1%"
+#define BX_DEPRECATED_COMMAND                                         \
+    "The '%1%' command has been replaced by '%2%'."
+#define BX_HELP_DESCRIPTION                                           \
     "Get a description and instructions for this command."
-#define BX_INVALID_COMMAND \
-    "{\"error\":\"'%1%' is not a command. Enter 'help' for a list of commands.\"}"
-#define BX_INVALID_PARAMETER \
-    "{\"error\": \"%1%\"}"
-#define BX_PRINTER_ARGUMENT_TABLE_HEADER \
+#define BX_INVALID_COMMAND                                            \
+    "'%1%' is not a command. Enter 'help' for a list of commands."
+#define BX_INVALID_PARAMETER                                          \
+    "%1%"
+#define BX_PRINTER_ARGUMENT_TABLE_HEADER                              \
     "Arguments (positional):"
-#define BX_PRINTER_DESCRIPTION_FORMAT \
+#define BX_PRINTER_DESCRIPTION_FORMAT                                 \
     "Info: %1%"
-#define BX_PRINTER_OPTION_TABLE_HEADER \
+#define BX_PRINTER_OPTION_TABLE_HEADER                                \
     "Options (named):"
-#define BX_PRINTER_USAGE_FORMAT \
+#define BX_PRINTER_USAGE_FORMAT                                       \
     "Usage: %1% %2% %3%"
-#define BX_PRINTER_VALUE_TEXT \
+#define BX_PRINTER_VALUE_TEXT                                         \
     "VALUE"
-#define BX_VERSION_MESSAGE \
+#define BX_VERSION_MESSAGE                                            \
     "Version: %1%"
 
 /**

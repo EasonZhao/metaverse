@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -54,9 +54,16 @@ public:
     virtual uint64_t nonce() const;
     virtual void set_nonce(uint64_t value);
 
+    void set_protocol_start_handler(std::function<void()> handler);
+
+    void invoke_protocol_start_handler(const code& ec);
+
+    virtual bool stopped(const code& ec) const;
+    using proxy::stopped;
+
 protected:
-    virtual void handle_activity();
-    virtual void handle_stopping();
+    virtual void handle_activity() override;
+    virtual void handle_stopping() override;
 
 private:
     void do_start(const code& ec, result_handler handler);
@@ -71,6 +78,8 @@ private:
     uint64_t nonce_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
+    std::function<void()> protocol_start_handler_;
+    upgrade_mutex mutex_;
 };
 
 } // namespace network

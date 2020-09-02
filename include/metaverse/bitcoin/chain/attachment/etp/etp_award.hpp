@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -27,35 +27,30 @@
 #include <metaverse/bitcoin/define.hpp>
 #include <metaverse/bitcoin/utility/reader.hpp>
 #include <metaverse/bitcoin/utility/writer.hpp>
+#include <metaverse/bitcoin/base_primary.hpp>
 
 namespace libbitcoin {
 namespace chain {
-	
+
 BC_CONSTEXPR size_t ETP_AWARD_FIX_SIZE = 8;
 
 class BC_API etp_award
+    : public base_primary<etp_award>
 {
 public:
-	etp_award();
-	etp_award(uint64_t height);
-    static etp_award factory_from_data(const data_chunk& data);
-    static etp_award factory_from_data(std::istream& stream);
-    static etp_award factory_from_data(reader& source);
+    etp_award();
+    etp_award(uint64_t height);
     static uint64_t satoshi_fixed_size();
 
-    bool from_data(const data_chunk& data);
-    bool from_data(std::istream& stream);
-    bool from_data(reader& source);
-    data_chunk to_data() const;
-    void to_data(std::ostream& stream) const;
-    void to_data(writer& sink) const;
+    bool from_data_t(reader& source);
+    void to_data_t(writer& sink) const;
     std::string to_string() const;
     bool is_valid() const;
     void reset();
     uint64_t serialized_size() const;
-	uint64_t get_height() const;
-	void set_height(uint64_t height);
-	
+    uint64_t get_height() const;
+    void set_height(uint64_t height);
+
 private:
     uint64_t height;
 };

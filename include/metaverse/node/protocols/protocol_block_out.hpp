@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -44,6 +44,8 @@ public:
     protocol_block_out(network::p2p& network, network::channel::ptr channel,
         blockchain::block_chain& blockchain);
 
+    ptr do_subscribe();
+
     /// Start the protocol.
     virtual void start();
 
@@ -69,7 +71,7 @@ private:
     bool handle_receive_send_headers(const code& ec, send_headers_ptr message);
 
     void handle_fetch_locator_hashes(const code& ec, const hash_list& hashes);
-    void handle_fetch_locator_headers(const code& ec, 
+    void handle_fetch_locator_headers(const code& ec,
         const header_list& headers);
 
     void handle_stop(const code&);

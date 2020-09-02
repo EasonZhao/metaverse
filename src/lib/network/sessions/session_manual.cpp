@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -60,6 +60,7 @@ void session_manual::handle_started(const code& ec, result_handler handler)
     }
 
     connector_.store(create_connector());
+    connect_timer_ = std::make_shared<deadline>(pool_, asio::seconds(2));
 
     // This is the end of the start sequence.
     handler(error::success);
@@ -99,37 +100,45 @@ void session_manual::start_connect(const std::string& hostname, uint16_t port,
 
     // MANUAL CONNECT OUTBOUND
     connector->connect(hostname, port,
-        BIND6(handle_connect, _1, _2, hostname, port, handler, retries));
+        BIND6(handle_connect, _1, _2, hostname, port, handler, retries - 1));
 }
 
 void session_manual::handle_connect(const code& ec, channel::ptr channel,
     const std::string& hostname, uint16_t port, channel_handler handler,
     uint32_t retries)
 {
+    if (channel && blacklisted(channel->authority())) {
+        log::debug(LOG_NETWORK)
+            << "Suspended blacklisted/banned manual connection [" << channel->authority() << "]";
+
+        handler(error::address_blocked, nullptr);
+        return;
+    }
+
     if (ec)
     {
-        log::warning(LOG_NETWORK)
+        log::trace(LOG_NETWORK)
             << "Failure connecting [" << config::endpoint(hostname, port)
             << "] manually: " << ec.message();
 
         // Retry logic.
         if (settings_.manual_attempt_limit == 0)
-            start_connect(hostname, port, handler, 0);
+            delay_new_connection(hostname, port, handler, 0);
         else if (retries > 0)
-            start_connect(hostname, port, handler, retries - 1);
+            delay_new_connection(hostname, port, handler, retries);
         else
             handler(ec, nullptr);
 
         return;
     }
 
-    log::info(LOG_NETWORK)
+    log::trace(LOG_NETWORK)
         << "Connected manual channel [" << config::endpoint(hostname, port)
         << "] as [" << channel->authority() << "]";
 
-    register_channel(channel, 
+    register_channel(channel,
         BIND5(handle_channel_start, _1, hostname, port, channel, handler),
-        BIND3(handle_channel_stop, _1, hostname, port));
+        BIND4(handle_channel_stop, _1, hostname, port, channel));
 }
 
 void session_manual::handle_channel_start(const code& ec,
@@ -139,18 +148,17 @@ void session_manual::handle_channel_start(const code& ec,
     // Treat a start failure just like a stop, but preserve the start handler.
     if (ec)
     {
-        log::info(LOG_NETWORK)
+        log::trace(LOG_NETWORK)
             << "Manual channel failed to start [" << channel->authority()
             << "] " << ec.message();
 
         // Special case for already connected, do not keep trying.
-        if (ec == (code)error::address_in_use)
+        if (ec.value() == error::address_in_use)
         {
             handler(ec, channel);
             return;
         }
 
-        connect(hostname, port, handler);
         return;
     }
 
@@ -163,18 +171,39 @@ void session_manual::handle_channel_start(const code& ec,
 
 void session_manual::attach_protocols(channel::ptr channel)
 {
-    attach<protocol_ping>(channel)->start([](const code&){});
-    attach<protocol_address>(channel)->start();
+    attach<protocol_ping>(channel)->do_subscribe()->start();
+    attach<protocol_address>(channel)->do_subscribe()->start();
+}
+
+void session_manual::delay_new_connection(const std::string& hostname, uint16_t port
+        , channel_handler handler, uint32_t retries)
+{
+    auto self = shared_from_this();
+    connect_timer_->start([this, self, hostname, port, handler, retries](const code& ec){
+        if (ec || stopped()) {
+            return;
+        }
+        pool_.service().post(
+            std::bind(&session_manual::start_connect,
+                shared_from_base<session_manual>(),
+                hostname, port, handler, retries));
+    });
 }
 
 // After a stop we don't use the caller's start handler, but keep connecting.
 void session_manual::handle_channel_stop(const code& ec,
-    const std::string& hostname, uint16_t port)
+    const std::string& hostname, uint16_t port, channel::ptr channel)
 {
-    log::debug(LOG_NETWORK)
+    log::trace(LOG_NETWORK)
         << "Manual channel stopped: " << ec.message();
 
-    connect(hostname, port);
+    if (stopped(ec) || (channel && blacklisted(channel->authority()))) {
+        connect_timer_->stop();
+        return;
+    }
+
+    delay_new_connection(hostname, port, [](code, channel::ptr){}, settings_.manual_attempt_limit);
+
 }
 
 } // namespace network

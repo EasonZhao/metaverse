@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -87,14 +87,23 @@ void protocol_version::start(event_handler handler)
 {
     const auto height = network_.height();
     const auto& settings = network_.network_settings();
+    complete_handler_ = handler;
 
     // The handler is invoked in the context of the last message receipt.
     protocol_timer::start(settings.channel_handshake(),
-        synchronize(handler, 2, NAME, false));
+        synchronize(BIND1(handle_complete, _1), 2, NAME, false));
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
     send_version(version_factory(authority(), settings, nonce(), height));
+}
+
+void protocol_version::handle_complete(const code& ec)
+{
+    if (!complete_handler_)
+        return;
+    complete_handler_(ec);
+    complete_handler_ = nullptr;
 }
 
 void protocol_version::send_version(const message::version& self)
@@ -108,7 +117,7 @@ void protocol_version::send_version(const message::version& self)
 bool protocol_version::handle_receive_version(const code& ec,
     version::ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -135,7 +144,7 @@ bool protocol_version::handle_receive_version(const code& ec,
 
 bool protocol_version::handle_receive_verack(const code& ec, verack::ptr)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -154,7 +163,7 @@ bool protocol_version::handle_receive_verack(const code& ec, verack::ptr)
 
 void protocol_version::handle_version_sent(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     if (ec)
@@ -169,7 +178,7 @@ void protocol_version::handle_version_sent(const code& ec)
 
 void protocol_version::handle_verack_sent(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     if (ec)

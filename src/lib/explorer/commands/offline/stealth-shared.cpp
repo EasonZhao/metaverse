@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -38,7 +38,7 @@ console_result stealth_shared::invoke(std::ostream& output,
     // Bound parameters.
     const auto& secret = get_secret_argument();
     const auto& pubkey = get_pubkey_argument();
-    
+
     ec_compressed product(pubkey);
     if (!bc::ec_multiply(product, secret))
     {
@@ -52,6 +52,6 @@ console_result stealth_shared::invoke(std::ostream& output,
     return console_result::okay;
 }
 
-} //namespace commands 
-} //namespace explorer 
-} //namespace libbitcoin 
+} //namespace commands
+} //namespace explorer
+} //namespace libbitcoin

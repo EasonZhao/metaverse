@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -34,6 +34,9 @@ namespace server {
 #define BS_VERSION_VARIABLE "version"
 #define BS_DAEMON_VARIABLE "daemon"
 #define BS_TESTNET_VARIABLE "testnet"
+#define BS_DATADIR_VARIABLE "datadir"
+#define BS_UI_VARIABLE "ui"
+
 
 // This must be lower case but the env var part can be any case.
 #define BS_CONFIG_VARIABLE "config"

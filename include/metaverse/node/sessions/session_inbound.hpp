@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -39,6 +39,9 @@ public:
     /// Construct an instance.
     session_inbound(network::p2p& network, blockchain::block_chain& blockchain,
         blockchain::transaction_pool& pool);
+
+    virtual void attach_handshake_protocols(network::channel::ptr channel,
+                result_handler handle_started) override;
 
 protected:
     /// Overridden to attach blockchain protocols.

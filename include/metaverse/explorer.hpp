@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2015 libbitcoin-explorer developers (see COPYING).
+// Copyright (c) 2014-2020 libbitcoin-explorer developers (see COPYING).
 //
 //        GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 //
@@ -8,7 +8,7 @@
 #define MVS_EXPLORER_HPP
 
 /**
- * API Users: Include only this header. Direct use of other headers is fragile 
+ * API Users: Include only this header. Direct use of other headers is fragile
  * and unsupported as header organization is subject to change.
  *
  * Maintainers: Do not include this header internal to this library.
@@ -23,32 +23,11 @@
 #include <metaverse/explorer/display.hpp>
 #include <metaverse/explorer/generated.hpp>
 #include <metaverse/explorer/parser.hpp>
-#include <metaverse/explorer/prop_tree.hpp>
+#include <metaverse/explorer/json_helper.hpp>
 #include <metaverse/explorer/utility.hpp>
-#include <metaverse/explorer/version.hpp>
-#include <metaverse/explorer/commands/seed.hpp>
-#include <metaverse/explorer/commands/ec-to-address.hpp>
-#include <metaverse/explorer/commands/ec-to-public.hpp>
-#include <metaverse/explorer/commands/fetch-balance.hpp>
-#include <metaverse/explorer/commands/fetch-header.hpp>
-#include <metaverse/explorer/commands/fetch-height.hpp>
 #include <metaverse/explorer/commands/fetch-history.hpp>
-#include <metaverse/explorer/commands/fetch-public-key.hpp>
 #include <metaverse/explorer/commands/fetch-stealth.hpp>
-#include <metaverse/explorer/commands/fetch-tx-index.hpp>
-#include <metaverse/explorer/commands/fetch-tx.hpp>
-#include <metaverse/explorer/commands/fetch-utxo.hpp>
-#include <metaverse/explorer/commands/hd-new.hpp>
-#include <metaverse/explorer/commands/hd-private.hpp>
-#include <metaverse/explorer/commands/hd-to-ec.hpp>
-#include <metaverse/explorer/commands/hd-to-public.hpp>
 #include <metaverse/explorer/commands/help.hpp>
-#include <metaverse/explorer/commands/input-set.hpp>
-#include <metaverse/explorer/commands/input-sign.hpp>
-#include <metaverse/explorer/commands/input-validate.hpp>
-#include <metaverse/explorer/commands/mnemonic-decode.hpp>
-#include <metaverse/explorer/commands/mnemonic-encode.hpp>
-#include <metaverse/explorer/commands/mnemonic-new.hpp>
 #include <metaverse/explorer/commands/send-tx.hpp>
 #include <metaverse/explorer/commands/settings.hpp>
 #include <metaverse/explorer/commands/stealth-decode.hpp>
@@ -57,8 +36,6 @@
 #include <metaverse/explorer/commands/stealth-secret.hpp>
 #include <metaverse/explorer/commands/stealth-shared.hpp>
 #include <metaverse/explorer/commands/tx-decode.hpp>
-#include <metaverse/explorer/commands/tx-encode.hpp>
-#include <metaverse/explorer/commands/tx-sign.hpp>
 #include <metaverse/explorer/commands/validate-tx.hpp>
 #include <metaverse/explorer/config/address.hpp>
 #include <metaverse/explorer/config/algorithm.hpp>

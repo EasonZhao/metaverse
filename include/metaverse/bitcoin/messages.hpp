@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -23,8 +23,6 @@
 
 #include <cstdint>
 #include <metaverse/bitcoin/message/address.hpp>
-#include <metaverse/bitcoin/message/alert.hpp>
-#include <metaverse/bitcoin/message/alert_payload.hpp>
 #include <metaverse/bitcoin/message/block_message.hpp>
 #include <metaverse/bitcoin/message/block_transactions.hpp>
 #include <metaverse/bitcoin/message/compact_block.hpp>

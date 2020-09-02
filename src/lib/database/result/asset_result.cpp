@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -28,28 +28,28 @@ namespace libbitcoin {
 namespace database {
 
 template <typename Iterator>
-std::shared_ptr<asset_detail> deserialize_account_detail(const Iterator first)
+std::shared_ptr<chain::asset_detail> deserialize_account_detail(const Iterator first)
 {
-	auto detail = std::make_shared<asset_detail>();
-	auto deserial = make_deserializer_unsafe(first);
-	detail->from_data(deserial);
-	return detail;
+    auto detail = std::make_shared<chain::asset_detail>();
+    auto deserial = make_deserializer_unsafe(first);
+    detail->from_data(deserial);
+    return detail;
 }
 asset_result::asset_result(const memory_ptr slab)
   : base_result(slab)
 {
 }
 
-std::shared_ptr<asset_detail> asset_result::get_asset_detail() const
+std::shared_ptr<chain::asset_detail> asset_result::get_asset_detail() const
 {
     //BITCOIN_ASSERT(get_slab());
-	std::shared_ptr<asset_detail> sp_acc(nullptr);
-	if(get_slab()) 
-	{
-	    const auto memory = REMAP_ADDRESS(get_slab());
-	    sp_acc = deserialize_account_detail(memory);
-	}
-	return sp_acc;
+    std::shared_ptr<chain::asset_detail> sp_acc(nullptr);
+    if(get_slab())
+    {
+        const auto memory = REMAP_ADDRESS(get_slab());
+        sp_acc = deserialize_account_detail(memory);
+    }
+    return sp_acc;
 }
 
 

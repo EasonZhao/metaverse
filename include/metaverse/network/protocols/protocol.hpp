@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -65,6 +65,8 @@ protected:
     protocol(const protocol&) = delete;
     void operator=(const protocol&) = delete;
 
+    virtual ~protocol() {}
+
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>
     auto bind(Handler&& handler, Args&&... args) ->
@@ -112,6 +114,8 @@ protected:
     /// complete before any other thread could read the peer version.
     virtual void set_peer_version(message::version::ptr value);
 
+    uint32_t peer_start_height();
+
     /// Get the threadpool.
     virtual threadpool& pool();
 
@@ -119,6 +123,8 @@ protected:
     virtual void stop(const code& ec);
 
     virtual bool misbehaving(int32_t howmuch);
+
+    bool channel_stopped() { return channel_->stopped(); }
 
 private:
     threadpool& pool_;

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-client.
  *
@@ -67,7 +67,7 @@ public:
     //-------------------------------------------------------------------------
 
     /// Resend any timed out work and return the smallest time remaining.
-    virtual int32_t refresh();
+    virtual int32_t refresh() override;
 
     /// Read from this stream onto the specified stream.
     virtual bool read(stream& stream) override;

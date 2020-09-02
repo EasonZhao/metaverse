@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -138,7 +138,9 @@ enum class opcode : uint8_t
     op_nop2 = 177,
     checklocktimeverify = op_nop2,
     op_nop3 = 178,
+    checkattenuationverify = op_nop3,
     op_nop4 = 179,
+    checksequenceverify = op_nop4,
     op_nop5 = 180,
     op_nop6 = 181,
     op_nop7 = 182,
@@ -168,12 +170,25 @@ enum script_context : uint32_t
     /// nop2 becomes check locktime verify
     bip65_enabled = 1 << 4,
 
+    /// nop3 becomes check attenuation verify
+    attenuation_enabled = 1 << 5,
+
+    /// nop4 becomes check sequence verify
+    bip112_enabled = 1 << 6,
+
     all_enabled = 0xffffffff
 };
 
+BC_API script_context get_script_context();
 BC_API std::string opcode_to_string(opcode value, uint32_t flags);
 BC_API opcode string_to_opcode(const std::string& value);
 BC_API opcode data_to_opcode(const data_chunk& value);
+
+// Determine if code is in the op_n range.
+BC_API bool within_op_n(opcode code);
+// Return the op_n index (i.e. value of n).
+BC_API uint8_t decode_op_n(opcode code);
+
 
 } // namespace chain
 } // namespace libbitcoin

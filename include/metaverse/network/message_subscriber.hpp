@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -57,7 +57,6 @@ class BCT_API message_subscriber
 {
 public:
     DEFINE_SUBSCRIBER_TYPE(address);
-    DEFINE_SUBSCRIBER_TYPE(alert);
     DEFINE_SUBSCRIBER_TYPE(block_message);
     DEFINE_SUBSCRIBER_TYPE(block_transactions);
     DEFINE_SUBSCRIBER_TYPE(compact_block);
@@ -93,7 +92,7 @@ public:
     /// This class is not copyable.
     message_subscriber(const message_subscriber&) = delete;
     void operator=(const message_subscriber&) = delete;
-    
+
     /**
      * Subscribe to receive a notification when a message of type is received.
      * The handler is unregistered when the call is made.
@@ -105,7 +104,7 @@ public:
     {
         subscribe(Message(), std::forward<Handler>(handler));
     }
-        
+
     /**
      * Load a stream into a message instance and notify subscribers.
      * @param[in]  stream      The stream from which to load the message.
@@ -172,7 +171,6 @@ public:
 
 private:
     DEFINE_SUBSCRIBER_OVERLOAD(address);
-    DEFINE_SUBSCRIBER_OVERLOAD(alert);
     DEFINE_SUBSCRIBER_OVERLOAD(block_message);
     DEFINE_SUBSCRIBER_OVERLOAD(block_transactions);
     DEFINE_SUBSCRIBER_OVERLOAD(compact_block);
@@ -200,7 +198,6 @@ private:
     DEFINE_SUBSCRIBER_OVERLOAD(version);
 
     DECLARE_SUBSCRIBER(address);
-    DECLARE_SUBSCRIBER(alert);
     DECLARE_SUBSCRIBER(block_message);
     DECLARE_SUBSCRIBER(block_transactions);
     DECLARE_SUBSCRIBER(compact_block);

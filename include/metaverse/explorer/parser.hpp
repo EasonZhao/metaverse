@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -63,6 +63,8 @@ public:
 protected:
     virtual void load_command_variables(variables_map& variables,
         std::istream& input, int argc, const char* argv[]);
+private:
+    using bc::config::parser::load_command_variables;
 
 private:
     static std::string system_config_directory();

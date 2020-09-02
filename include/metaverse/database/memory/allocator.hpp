@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -38,7 +38,7 @@ class BCD_API allocator
   : public memory
 {
 public:
-    allocator(shared_mutex& mutex);
+    allocator(upgrade_mutex& mutex);
     ~allocator();
 
     /// This class is not copyable.
@@ -57,7 +57,7 @@ protected:
     void downgrade(uint8_t* data);
 
 private:
-    shared_mutex& mutex_;
+    upgrade_mutex& mutex_;
     uint8_t* data_;
 };
 

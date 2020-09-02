@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS).
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS).
  * Copyright (C) 2013, 2016 Swirly Cloud Limited.
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of the
@@ -23,7 +23,7 @@ using namespace std;
 
 namespace mgbubble {
 
-StreamBuf::StreamBuf(mbuf& buf) throw(bad_alloc) : buf_(buf)
+StreamBuf::StreamBuf(mbuf& buf) : buf_(buf)
 {
   if (!buf_.buf) {
     // Pre-allocate buffer.

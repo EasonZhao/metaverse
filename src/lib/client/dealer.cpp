@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-client.
  *
@@ -124,7 +124,7 @@ int32_t dealer::refresh()
             // Resend is helpful in the case where the server is overloaded.
             // A zmq router drops messages as it reaches the high water mark.
             request->second.resends++;
-            request->second.deadline = asio::steady_clock::now() + 
+            request->second.deadline = asio::steady_clock::now() +
                 asio::milliseconds(timeout_milliseconds_);
 
             // Timed out and not done, go to sleep for no more than timeout.

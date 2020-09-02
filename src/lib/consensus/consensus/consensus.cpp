@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-consensus.
  *
@@ -37,7 +37,7 @@
 namespace libbitcoin {
 namespace consensus {
 
-// Static initialization of libsecp256k1 initialization context. 
+// Static initialization of libsecp256k1 initialization context.
 ECCVerifyHandle TxInputStream::secp256k1_context_ = ECCVerifyHandle();
 
 TxInputStream::TxInputStream(const unsigned char* transaction,
@@ -108,7 +108,7 @@ verify_result_type script_error_to_verify_result(ScriptError_t code)
         case SCRIPT_ERR_UNBALANCED_CONDITIONAL:
             return verify_result_unbalanced_conditional;
 
-        // BIP65
+        // BIP65/BIP112 (shared codes)
         case SCRIPT_ERR_NEGATIVE_LOCKTIME:
             return verify_result_negative_locktime;
         case SCRIPT_ERR_UNSATISFIED_LOCKTIME:
@@ -173,14 +173,18 @@ unsigned int verify_flags_to_script_flags(unsigned int flags)
         script_flags |= SCRIPT_VERIFY_CLEANSTACK;
     if ((flags & verify_flags_checklocktimeverify) != 0)
         script_flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    if ((flags & verify_flags_checkattenuationverify) != 0)
+        script_flags |= SCRIPT_VERIFY_CHECKATTENUATIONVERIFY;
+    if ((flags & verify_flags_checksequenceverify) != 0)
+        script_flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
 
     return script_flags;
 }
 
 // This function is published. The implementation exposes no satoshi internals.
-verify_result_type verify_script(const unsigned char* transaction, 
-    size_t transaction_size, const unsigned char* prevout_script, 
-    size_t prevout_script_size, unsigned int tx_input_index, 
+verify_result_type verify_script(const unsigned char* transaction,
+    size_t transaction_size, const unsigned char* prevout_script,
+    size_t prevout_script_size, unsigned int tx_input_index,
     unsigned int flags)
 {
     if (transaction_size > 0 && transaction == NULL)
@@ -190,12 +194,12 @@ verify_result_type verify_script(const unsigned char* transaction,
         throw std::invalid_argument("prevout_script");
 
     CTransaction tx;
-    try 
+    try
     {
         TxInputStream stream(transaction, transaction_size);
         Unserialize(stream, tx, SER_NETWORK, PROTOCOL_VERSION);
     }
-    catch (const std::exception&)
+    catch (const std::exception& e)
     {
         return verify_result_tx_invalid;
     }

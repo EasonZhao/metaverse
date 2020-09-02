@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -40,6 +40,15 @@ namespace network {
 /// The store can be loaded and saved from/to the specified file path.
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
+
+struct address_compare{
+    bool operator()(const libbitcoin::message::network_address& lhs, const libbitcoin::message::network_address& rhs) const
+    {
+        typedef std::tuple<message::ip_address, uint16_t> tup_cmp;
+        return tup_cmp(lhs.ip, lhs.port) < tup_cmp(rhs.ip, rhs.port);
+    }
+};
+
 class BCT_API hosts
   : public enable_shared_from_base<hosts>
 {
@@ -55,39 +64,61 @@ public:
     hosts(const hosts&) = delete;
     void operator=(const hosts&) = delete;
 
+    virtual ~hosts() {}
+
     /// Load hosts file if found.
     virtual code start();
 
     // Save hosts to file.
     virtual code stop();
 
+    // Clear hosts buffer
+    virtual code clear();
+    virtual code after_reseeding();
+
     virtual size_t count() const;
     virtual code fetch(address& out, const config::authority::list& excluded_list);
+    virtual code fetch_seed(address& out, const config::authority::list& excluded_list);
+    virtual code store_seed(const address& host);
+    virtual code remove_seed(const address& host);
     virtual code remove(const address& host);
     virtual code store(const address& host);
     virtual void store(const address::list& hosts, result_handler handler);
     address::list copy();
+    address::list copy_seeds();
+
 private:
     typedef boost::circular_buffer<address> list;
     typedef list::iterator iterator;
 
     iterator find(const address& host);
-    void do_store(const address& host, result_handler handler);
+    iterator find(list& buffer, const address& host);
     void handle_timer(const code& ec);
+
+    bool store_cache(bool succeed_clear_buffer = false);
+
+    template <typename T>
+    code fetch(T& buffer, address& out, const config::authority::list& excluded_list);
+
+    // record the seed count
+    const size_t seed_count;
+    const size_t host_pool_capacity_;
 
     // These are protected by a mutex.
     list buffer_;
+    list backup_;
+    list inactive_;
+    address::list seeds_;
     std::atomic<bool> stopped_;
     mutable upgrade_mutex mutex_;
-
-    // This is thread safe.
-    dispatcher dispatch_;
 
     // HACK: we use this because the buffer capacity cannot be set to zero.
     const bool disabled_;
     const boost::filesystem::path file_path_;
     threadpool& pool_;
     deadline::ptr snap_timer_;
+
+    const config::authority& self_;
 };
 
 } // namespace network

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -19,6 +19,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <metaverse/bitcoin/message/network_address.hpp>
+#include <metaverse/macros_define.hpp>
 
 #include <boost/iostreams/stream.hpp>
 #include <metaverse/bitcoin/utility/container_sink.hpp>
@@ -27,7 +28,7 @@
 #include <metaverse/bitcoin/utility/ostream_writer.hpp>
 #include <string.h>
 
-#define	INADDR_NONE		((in_addr_t) 0xffffffff)
+#define    INADDR_NONE        ((in_addr_t) 0xffffffff)
 
 namespace libbitcoin {
 namespace message {
@@ -73,37 +74,37 @@ bool network_address::is_valid() const
         || (ip != null_address);
 #else
     // Cleanup 3-byte shifted addresses caused by garbage in size field
-	// of addr messages from versions before 0.2.9 checksum.
-	// Two consecutive addr messages look like this:
-	// header20 vectorlen3 addr26 addr26 addr26 header20 vectorlen3 addr26 addr26 addr26...
-	// so if the first length field is garbled, it reads the second batch
-	// of addr misaligned by 3 bytes.
-	if (memcmp(ip.data(), pchIPv4+3, sizeof(pchIPv4)-3) == 0)
-		return false;
+    // of addr messages from versions before 0.2.9 checksum.
+    // Two consecutive addr messages look like this:
+    // header20 vectorlen3 addr26 addr26 addr26 header20 vectorlen3 addr26 addr26 addr26...
+    // so if the first length field is garbled, it reads the second batch
+    // of addr misaligned by 3 bytes.
+    if (memcmp(ip.data(), pchIPv4+3, sizeof(pchIPv4)-3) == 0)
+        return false;
 
-	// unspecified IPv6 address (::/128)
-	unsigned char ipNone[16] = {};
-	if (memcmp(ip.data(), ipNone, 16) == 0)
-		return false;
+    // unspecified IPv6 address (::/128)
+    unsigned char ipNone[16] = {};
+    if (memcmp(ip.data(), ipNone, 16) == 0)
+        return false;
 
-	// documentation IPv6 address
-	if (is_RFC3849())
-		return false;
+    // documentation IPv6 address
+    if (is_RFC3849())
+        return false;
 
-	if (is_ipv4())
-	{
-		// INADDR_NONE
-		uint32_t ipNone = 0;
-		if (memcmp(&ip[12], &ipNone, 4) == 0)
-			return false;
+    if (is_ipv4())
+    {
+        // INADDR_NONE
+        uint32_t ipNone = 0;
+        if (memcmp(&ip[12], &ipNone, 4) == 0)
+            return false;
 
-		// 0
-		ipNone = 0;
-		if (memcmp(&ip[12], &ipNone, 4) == 0)
-			return false;
-	}
+        // 0
+        ipNone = 0;
+        if (memcmp(&ip[12], &ipNone, 4) == 0)
+            return false;
+    }
 
-	return true;
+    return true;
 #endif
 }
 
@@ -214,19 +215,16 @@ bool network_address::is_ipv6() const
 
 bool network_address::is_private_network()
 {
-	return is_RFC1918();
+    return is_RFC1918();
 }
 
 bool network_address::is_RFC1918() const
 {
-#if 0 //fixme jianglh
     return is_ipv4() && (
         get_byte(3) == 10 ||
         (get_byte(3) == 192 && get_byte(2) == 168) ||
         (get_byte(3) == 172 && (get_byte(2) >= 16 && get_byte(2) <= 31)));
-#else
-	return false;
-#endif
+    return false;
 }
 
 bool network_address::is_RFC3927() const
@@ -298,13 +296,15 @@ bool network_address::is_local() const
 
 bool network_address::is_routable() const
 {
+#ifdef PRIVATE_CHAIN
+    return is_valid();
+#endif
     return is_valid() && !(is_RFC1918() || is_RFC3927() || is_RFC4862() || (is_RFC4193() && !is_tor()) || is_RFC4843() || is_local());
 }
 
 bool network_address::is_ulticast() const
 {
-    return    (is_ipv4() && (get_byte(3) & 0xF0) == 0xE0)
-           || (get_byte(15) == 0xFF);
+    return (is_ipv4() && (get_byte(3) & 0xF0) == 0xE0) || (get_byte(15) == 0xFF);
 }
 
 

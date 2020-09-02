@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -26,12 +26,12 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include <jsoncpp/json/json.h>
 #include <metaverse/client.hpp>
 
-// We use the generic helper definitions in libbitcoin to define BCX_API 
+// We use the generic helper definitions in libbitcoin to define BCX_API
 // and BCX_INTERNAL. BCX_API is used for the public API symbols. It either DLL
-// imports or DLL exports (or does nothing for static build) BCX_INTERNAL is 
+// imports or DLL exports (or does nothing for static build) BCX_INTERNAL is
 // used for non-api symbols.
 
 #if defined BCX_STATIC
@@ -48,18 +48,18 @@
 /**
  * The name of this program.
  */
-#define BX_PROGRAM_NAME "mvs"
+#define BX_PROGRAM_NAME "mvs-cli"
 
 /**
  * Delimiter for use in word splitting serialized input and output points.
  */
 #define BX_TX_POINT_DELIMITER ":"
-    
+
 /**
  * Default delimiter for use in word splitting and joining operations.
  */
 #define BX_SENTENCE_DELIMITER " "
-    
+
 /**
  * Environment variable prefix for integrated environment variables.
  */
@@ -72,11 +72,38 @@
 #define BX_STDIO_PATH_SENTINEL "-"
 
 /**
+ * Show in uncompleted commands.
+ */
+#define IN_DEVELOPING "The command is in develeping, replace it with original command."
+
+/**
+ * Show Account messages.
+ */
+#define BX_ACCOUNT_NAME "Account name required."
+#define BX_ACCOUNT_AUTH "Account password(authorization) required."
+
+/**
+ * Show Account messages.
+ */
+#define BX_ADMIN_NAME "Administrator required.(administrator_required is true)"
+#define BX_ADMIN_AUTH "Administrator password required."
+
+#define BX_MST_OFFERING_CURVE  "The token offering model by block height. \
+    TYPE=1 - fixed quantity model; TYPE=2 - specify parameters; \
+    LQ - Locked Quantity each period; \
+    LP - Locked Period, numeber of how many blocks; \
+    UN - Unlock Number, number of how many LPs; \
+    eg: \
+        TYPE=1;LQ=9000;LP=60000;UN=3  \
+        TYPE=2;LQ=9000;LP=60000;UN=3;UC=20000,20000,20000;UQ=3000,3000,3000 \
+    defaults to disable. "
+
+
+/**
  * Space-saving namespaces.
  */
 namespace ph = std::placeholders;
 namespace po = boost::program_options;
-namespace pt = boost::property_tree;
 
 /**
  * Space-saving, clarifying and/or differentiating external type equivalents.

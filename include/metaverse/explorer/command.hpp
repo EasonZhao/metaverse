@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -49,19 +49,31 @@
 #include <metaverse/explorer/config/wrapper.hpp>
 #include <metaverse/explorer/utility.hpp>
 
-#include <metaverse/blockchain/block_chain_impl.hpp> // for blockchain
-#include <metaverse/consensus/miner.hpp> // for miner
-
 /********* GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY **********/
 
 namespace libbitcoin {
 namespace explorer {
 
-#define BX_PROGRAM_NAME "mvs"
 #define BX_HELP_VARIABLE "help"
 #define BX_CONFIG_VARIABLE "config"
 #define LOG_COMMAND "commands"
-BC_DECLARE_CONFIG_DEFAULT_PATH("conf" / BX_PROGRAM_NAME ".conf")
+BC_DECLARE_CONFIG_DEFAULT_PATH(".metaverse" / "mvs.conf")
+
+/**
+ * Suppported command category.
+ */
+enum : int {
+    ctgy_extension = 1 << 0,
+    ctgy_online = 1 << 1,
+    ctgy_admin_required = 1 << 2,
+    ctgy_account_required = 1 << 3,
+
+    ex_online = ctgy_extension | ctgy_online,
+    ex_admin = ctgy_extension | ctgy_admin_required,
+    ex_account = ctgy_extension | ctgy_account_required,
+    ex_on_admin = ctgy_extension | ctgy_online | ctgy_admin_required,
+    ex_on_account = ctgy_extension | ctgy_online | ctgy_account_required
+};
 
 /**
  * Base class for definition of each Bitcoin Explorer command.
@@ -69,6 +81,7 @@ BC_DECLARE_CONFIG_DEFAULT_PATH("conf" / BX_PROGRAM_NAME ".conf")
 class BCX_API command
 {
 public:
+    virtual ~command() {}
 
     /**
      * The symbolic (not localizable) command name, lower case.
@@ -97,6 +110,17 @@ public:
     }
 
     /**
+     * The localizable command category type.
+     * @param   Example: cgty_extension | cgty_online
+     * @return  Example: true | false
+     */
+
+    virtual bool category(int bs)
+    {
+        return false;
+    }
+
+    /**
      * The localizable command description.
      * @return  Example: "Get transactions by hash."
      */
@@ -114,12 +138,14 @@ public:
         return false;
     }
 
-    virtual bool is_block_height_fullfilled(uint64_t height){
-    	return true;
+    virtual bool is_block_height_fullfilled(uint64_t height)
+    {
+        return true;
     }
 
-    virtual uint64_t minimum_block_height(){
-    	return 0;
+    virtual uint64_t minimum_block_height()
+    {
+        return 0;
     }
 
     /**
@@ -172,7 +198,7 @@ public:
         definitions.add_options()
         (
             /* This composes with the command line options. */
-            BX_CONFIG_VARIABLE, 
+            BX_CONFIG_VARIABLE,
             value<boost::filesystem::path>()
                 ->composing()->default_value(config_default_path()),
             "The path to the configuration settings file."
@@ -184,7 +210,7 @@ public:
      * @param[in]  input      The input stream for loading the parameters.
      * @param[in]  variables  The loaded variables.
      */
-    BCX_API virtual void load_fallbacks(std::istream& input, 
+    BCX_API virtual void load_fallbacks(std::istream& input,
         po::variables_map& variables)
     {
     }
@@ -336,7 +362,7 @@ public:
     }
 
     /* Properties */
-    
+
     /**
      * Get command line argument metadata.
      */
@@ -657,10 +683,20 @@ public:
         setting_.server.client_private_key = value;
     }
 
+    virtual void set_api_version(uint8_t ver)
+    {
+        setting_.server.api_version = ver;
+    }
+
+    virtual uint8_t get_api_version()
+    {
+        return setting_.server.api_version;
+    }
+
 protected:
 
     /**
-     * This base class is abstract but not pure virtual, so prevent direct 
+     * This base class is abstract but not pure virtual, so prevent direct
      * construction here.
      */
     command()
@@ -668,7 +704,7 @@ protected:
     }
 
 private:
-    
+
     /**
      * Command line argument metadata.
      */
@@ -750,7 +786,8 @@ private:
                 connect_retries(),
                 connect_timeout_seconds(),
                 server_public_key(),
-                client_private_key()
+                client_private_key(),
+                api_version(0)// defaults to v1, else v2. init as 0.
             {
             }
 
@@ -759,6 +796,7 @@ private:
             uint16_t connect_timeout_seconds;
             bc::config::sodium server_public_key;
             bc::config::sodium client_private_key;
+            uint8_t api_version;
         } server;
 
         setting()

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -26,7 +26,7 @@
 #include <metaverse/explorer/callback_state.hpp>
 #include <metaverse/explorer/define.hpp>
 #include <metaverse/explorer/display.hpp>
-#include <metaverse/explorer/prop_tree.hpp>
+#include <metaverse/explorer/json_helper.hpp>
 #include <metaverse/explorer/utility.hpp>
 
 
@@ -57,7 +57,7 @@ console_result validate_tx::invoke(std::ostream& output,
     {
         if (indexes.empty())
         {
-            state.output(BX_VALIDATE_TX_VALID);
+            state.output(std::string(BX_VALIDATE_TX_VALID));
             return;
         }
 
@@ -79,6 +79,6 @@ console_result validate_tx::invoke(std::ostream& output,
     return state.get_result();
 }
 
-} //namespace commands 
-} //namespace explorer 
-} //namespace libbitcoin 
+} //namespace commands
+} //namespace explorer
+} //namespace libbitcoin

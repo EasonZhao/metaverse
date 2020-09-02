@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -33,7 +33,7 @@
 
 namespace libbitcoin {
 namespace wallet {
-    
+
 static const auto bitcoin_scheme = "bitcoin";
 static const auto parameter_amount = "amount";
 static const auto parameter_label = "label";
@@ -244,7 +244,7 @@ bool bitcoin_uri::set_parameter(const std::string& key,
         set_message(value);
     else if (key == parameter_r)
         set_r(value);
-    
+
     // Fail on any required parameter that we don't support.
     return !required(key);
 }

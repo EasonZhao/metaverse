@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -59,18 +59,12 @@ protocol_block_out::protocol_block_out(p2p& network, channel::ptr channel,
 {
 }
 
-// Start.
-//-----------------------------------------------------------------------------
-
-void protocol_block_out::start()
+protocol_block_out::ptr protocol_block_out::do_subscribe()
 {
-    protocol_events::start(BIND1(handle_stop, _1));
-
-    // TODO: move send_headers to a derived class protocol_block_out_70012.
     if (headers_to_peer_)
     {
         // Send headers vs. inventory anncements if headers_to_peer_ is set.
-    	log::trace(LOG_NODE) << "protocol block out headers to peer" ;
+        log::trace(LOG_NODE) << "protocol block out headers to peer" ;
         SUBSCRIBE2(send_headers, handle_receive_send_headers, _1, _2);
     }
 
@@ -79,9 +73,24 @@ void protocol_block_out::start()
     SUBSCRIBE2(get_blocks, handle_receive_get_blocks, _1, _2);
     SUBSCRIBE2(get_data, handle_receive_get_data, _1, _2);
 
+    protocol_events::start(BIND1(handle_stop, _1));
+    return std::dynamic_pointer_cast<protocol_block_out>(protocol::shared_from_this());
+}
+
+// Start.
+//-----------------------------------------------------------------------------
+
+void protocol_block_out::start()
+{
+
+    // TODO: move send_headers to a derived class protocol_block_out_70012.
+
     // Subscribe to block acceptance notifications (our heartbeat).
     blockchain_.subscribe_reorganize(
         BIND4(handle_reorganized, _1, _2, _3, _4));
+    if (channel_stopped()) {
+        blockchain_.fired();
+    }
 }
 
 // Receive send_headers.
@@ -91,7 +100,7 @@ void protocol_block_out::start()
 bool protocol_block_out::handle_receive_send_headers(const code& ec,
     send_headers_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -128,7 +137,7 @@ size_t protocol_block_out::locator_limit() const
 bool protocol_block_out::handle_receive_get_headers(const code& ec,
     get_headers_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -141,9 +150,9 @@ bool protocol_block_out::handle_receive_get_headers(const code& ec,
 
     const auto locator_size = message->start_hashes.size();
 
-    if (locator_size > 100)//locator_limit())
+    if (locator_size > locator_limit())
     {
-        log::warning(LOG_NODE)
+        log::debug(LOG_NODE)
             << "Invalid get_headers locator size (" << locator_size
             << ") from [" << authority() << "] ";
         stop(error::channel_stopped);
@@ -157,10 +166,30 @@ bool protocol_block_out::handle_receive_get_headers(const code& ec,
     // and one of its other peers populates the chain back to this level. In
     // that case we would not respond but our peer's other peer should.
     const auto threshold = last_locator_top_.load();
-    log::trace(LOG_NODE) << "protocol block out handle receive get headers, locator size," << locator_size;
 
-    blockchain_.fetch_locator_block_headers(*message, threshold, locator_cap,
-        BIND2(handle_fetch_locator_headers, _1, _2));
+    auto need_to_locate = true;
+    if (locator_size > 0)
+    {
+        auto& blockchain = static_cast<simple_chain&>(static_cast<block_chain_impl&>(blockchain_));
+        uint64_t height{0};
+        auto ok = blockchain.get_height(height, message->start_hashes.back());
+        if (!ok)
+        {
+            need_to_locate = false;
+        }
+    }
+
+    if (need_to_locate)
+    {
+        auto& blockchain = static_cast<simple_chain&>(static_cast<block_chain_impl&>(blockchain_));
+        uint64_t top;
+        auto is_got = blockchain.get_last_height(top);
+        int64_t block_interval = 2000;
+        auto res = static_cast<int64_t>(top) - static_cast<int64_t>(peer_start_height()) - block_interval;
+        blockchain_.fetch_locator_block_headers(*message, threshold, res>0?locator_cap:10,
+            BIND2(handle_fetch_locator_headers, _1, _2));
+    }
+
     return true;
 }
 
@@ -168,7 +197,7 @@ bool protocol_block_out::handle_receive_get_headers(const code& ec,
 void protocol_block_out::handle_fetch_locator_headers(const code& ec,
     const header_list& headers)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped(ec))
         return;
 
     if (ec)
@@ -181,11 +210,11 @@ void protocol_block_out::handle_fetch_locator_headers(const code& ec,
     }
 
     if(headers.empty())
-	{
-		return;
-	}
+    {
+        return;
+    }
     log::trace(LOG_NODE)
-    	<< "handle fetch locator headers size," << headers.size();
+        << "handle fetch locator headers size," << headers.size();
 
     // Respond to get_headers with headers.
     const message::headers response(headers);
@@ -198,7 +227,7 @@ void protocol_block_out::handle_fetch_locator_headers(const code& ec,
 bool protocol_block_out::handle_receive_get_blocks(const code& ec,
     get_blocks_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -213,7 +242,7 @@ bool protocol_block_out::handle_receive_get_blocks(const code& ec,
 
     if (locator_size > locator_limit())
     {
-        log::trace(LOG_NODE)
+        log::warning(LOG_NODE)
             << "Invalid get_blocks locator size (" << locator_size
             << ") from [" << authority() << "] ";
         stop(error::channel_stopped);
@@ -227,8 +256,13 @@ bool protocol_block_out::handle_receive_get_blocks(const code& ec,
     // and one of its other peers populates the chain back to this level. In
     // that case we would not respond but our peer's other peer should.
     const auto threshold = last_locator_top_.load();
+    auto& blockchain = static_cast<block_chain_impl&>(blockchain_);
+    uint64_t top;
+    auto is_got = blockchain.get_last_height(top);
+    int64_t block_interval = 2000;
+    auto res = static_cast<int64_t>(top) - static_cast<int64_t>(peer_start_height()) - block_interval;
 
-    blockchain_.fetch_locator_block_hashes(*message, threshold, locator_cap,
+    blockchain_.fetch_locator_block_hashes(*message, threshold, res>0?locator_cap:10,
         BIND2(handle_fetch_locator_hashes, _1, _2));
     return true;
 }
@@ -236,7 +270,7 @@ bool protocol_block_out::handle_receive_get_blocks(const code& ec,
 void protocol_block_out::handle_fetch_locator_hashes(const code& ec,
     const hash_list& hashes)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped(ec))
         return;
 
     if (ec)
@@ -264,8 +298,10 @@ void protocol_block_out::handle_fetch_locator_hashes(const code& ec,
 bool protocol_block_out::handle_receive_get_data(const code& ec,
     get_data_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
         return false;
+    }
 
     if (ec)
     {
@@ -295,10 +331,12 @@ bool protocol_block_out::handle_receive_get_data(const code& ec,
 void protocol_block_out::send_block(const code& ec, chain::block::ptr block,
     const hash_digest& hash)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped(ec))
+    {
         return;
+    }
 
-    if (ec == (code)error::not_found)
+    if (ec.value() == error::not_found)
     {
         log::trace(LOG_NODE)
             << "Block requested by [" << authority() << "] not found." << encode_hash(hash);
@@ -325,10 +363,10 @@ void protocol_block_out::send_block(const code& ec, chain::block::ptr block,
 void protocol_block_out::send_merkle_block(const code& ec,
     merkle_block_ptr message, const hash_digest& hash)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped(ec))
         return;
 
-    if (ec == (code)error::not_found)
+    if (ec.value() == error::not_found)
     {
         log::trace(LOG_NODE)
             << "Merkle block requested by [" << authority() << "] not found.";
@@ -358,13 +396,13 @@ void protocol_block_out::send_merkle_block(const code& ec,
 bool protocol_block_out::handle_reorganized(const code& ec, size_t fork_point,
     const block_ptr_list& incoming, const block_ptr_list& outgoing)
 {
-    if (stopped() || ec == (code)error::service_stopped)
+    if (stopped(ec))
         return false;
 
-    if (ec == (code)error::mock)
-	{
-		return true;
-	}
+    if (ec.value() == error::mock)
+    {
+        return true;
+    }
 
     if (ec)
     {
@@ -390,7 +428,15 @@ bool protocol_block_out::handle_reorganized(const code& ec, size_t fork_point,
 
         if (!announcement.elements.empty())
         {
-        	log::trace(LOG_NODE) << "protocol block out announcement headers size," << announcement.elements.size();
+            auto& blockchain = static_cast<block_chain_impl&>(blockchain_);
+            uint64_t top;
+            auto is_got = blockchain.get_last_height(top);
+            int64_t block_interval = 20000;
+            auto res = std::abs(static_cast<int64_t>(top) - static_cast<int64_t>(peer_start_height()));
+            if (!is_got || res > block_interval)
+            {
+                return true;
+            }
             SEND2(announcement, handle_send, _1, announcement.command);
         }
         return true;
@@ -405,7 +451,15 @@ bool protocol_block_out::handle_reorganized(const code& ec, size_t fork_point,
 
     if (!announcement.inventories.empty())
     {
-    	log::trace(LOG_NODE) << "protocol block out announcement inventories size," << announcement.inventories.size();
+        auto& blockchain = static_cast<block_chain_impl&>(blockchain_);
+        uint64_t top;
+        auto is_got = blockchain.get_last_height(top);
+        int64_t block_interval = 20000;
+        auto res = std::abs(static_cast<int64_t>(top) - static_cast<int64_t>(peer_start_height()));
+        if (!is_got || res > block_interval)
+        {
+            return true;
+        }
         SEND2(announcement, handle_send, _1, announcement.command);
     }
     return true;

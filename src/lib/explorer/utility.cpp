@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -36,10 +36,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/info_parser.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/xml_parser.hpp>
 #include <metaverse/client.hpp>
 #include <metaverse/explorer/command.hpp>
 #include <metaverse/explorer/define.hpp>
@@ -128,7 +124,7 @@ bool starts_with(const std::string& value, const std::string& prefix)
     {
         return boost::istarts_with(value, prefix);
     }
-    catch (boost::bad_lexical_cast)
+    catch (const boost::bad_lexical_cast&)
     {
         return false;
     }
@@ -158,29 +154,44 @@ data_chunk wrap(const wallet::wrapped_data& data)
     return bytes;
 }
 
-// We aren't yet using a reader, although it is possible using ptree.
-std::ostream& write_stream(std::ostream& output, const pt::ptree& tree,
+std::ostream& write_stream(std::ostream& output, const Json::Value& tree,
     encoding_engine engine)
 {
     switch (engine)
     {
         case encoding_engine::json:
-            pt::write_json(output, tree);
-            break;
-        case encoding_engine::xml:
-            pt::write_xml(output, tree);
-
-            // property tree XML serialization doesn't terminate the string.
-            output << std::endl;
-
+            output << tree.toStyledString();
             break;
         default:
-            pt::write_info(output, tree);
+            output << tree.toStyledString();
             break;
     }
 
     return output;
 }
+
+uint32_t to_uint32_throw(const std::string& text, const std::string& except_desc)
+{
+    try {
+        return std::stoul(text);
+    }
+    catch(const std::exception& e) {
+        throw std::logic_error(except_desc + " Convert " + text + " to uint32_t caught exception: " + e.what());
+    }
+    return 0;
+}
+
+uint64_t to_uint64_throw(const std::string& text, const std::string& except_desc)
+{
+    try {
+        return std::stoull(text);
+    }
+    catch(const std::exception& e) {
+        throw std::logic_error(except_desc + " Convert " + text + " to uint64_t caught exception: " + e.what());
+    }
+    return 0;
+}
+
 
 } // namespace explorer
 } // namespace libbitcoin

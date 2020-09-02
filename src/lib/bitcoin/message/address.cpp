@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -129,7 +129,7 @@ void address::to_data(uint32_t version, writer& sink) const
 
 uint64_t address::serialized_size(uint32_t version) const
 {
-    return variable_uint_size(addresses.size()) + 
+    return variable_uint_size(addresses.size()) +
         (addresses.size() * network_address::satoshi_fixed_size(version, true));
 }
 

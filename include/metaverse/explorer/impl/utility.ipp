@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -24,7 +24,7 @@
 #ifdef _MSC_VER
 // Suppressing msvc warnings from boost that are heard to deal with
 // because boost/algorithm carelessly defines _SCL_SECURE_NO_WARNINGS
-// without sampling it first. 
+// without sampling it first.
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #endif
@@ -38,7 +38,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
 #include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/lexical_cast.hpp>
@@ -72,7 +71,7 @@ template <typename Value>
 void deserialize(std::vector<Value>& collection, const std::string& text,
     bool trim)
 {
-    // This had problems with the inclusion of the ideographic (CJK) space 
+    // This had problems with the inclusion of the ideographic (CJK) space
     // (0xe3,0x80, 0x80). Need to infuse the local in bc::split().
     const auto tokens = split(text, " \n\r\t");
     for (const auto& token: tokens)
@@ -108,7 +107,7 @@ void load_path(Value& parameter, const std::string& name,
 
     // Get the argument value as a string.
     const auto path = boost::any_cast<std::string>(variable->second.value());
-    
+
     // The path is the stdio sentinal, so clear parameter and don't read file.
     if (path == BX_STDIO_PATH_SENTINEL)
     {
@@ -143,7 +142,7 @@ data_chunk serialize_satoshi_item(const Item& item)
 template <typename Instance>
 void write_file(std::ostream& output, const std::string& path,
     const Instance& instance, bool terminate)
-{        
+{
     if (path.empty() || path == BX_STDIO_PATH_SENTINEL)
     {
         output << instance;

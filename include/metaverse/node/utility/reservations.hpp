@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -74,8 +74,8 @@ public:
     void set_max_request(size_t value);
 
     std::size_t size() {
-    	shared_lock lock(mutex_);
-    	return table_.size();
+        shared_lock lock(mutex_);
+        return table_.size();
     }
 
 private:

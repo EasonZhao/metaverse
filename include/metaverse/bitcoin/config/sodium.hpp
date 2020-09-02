@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -39,7 +39,7 @@ class BC_API sodium
 public:
     /**
      * A list of base85 values.
-     * This must provide operator<< for ostream in order to be used as a 
+     * This must provide operator<< for ostream in order to be used as a
      * boost::program_options default_value.
      */
     typedef std::vector<sodium> list;
@@ -66,6 +66,7 @@ public:
      * @param[in]  other  The object to copy into self on construct.
      */
     sodium(const sodium& other);
+    sodium& operator=(const sodium&) = default;
 
     /**
      * Getter.
@@ -76,7 +77,7 @@ public:
     /**
      * Overload cast to internal type.
      * @return  This object's value cast to internal type.
-	 * chenhao
+     * chenhao
      */
     operator hash_digest() const;
 

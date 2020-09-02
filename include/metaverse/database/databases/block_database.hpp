@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -76,10 +76,10 @@ public:
 
     /// Unlink all blocks upwards from (and including) from_height.
     void unlink(size_t from_height);
-	
-	/// Remove block from block hash table
-	void remove(const hash_digest& hash);
-	
+
+    /// Remove block from block hash table
+    void remove(const hash_digest& hash);
+
     /// Synchronise storage with disk so things are consistent.
     /// Should be done at the end of every block write.
     void sync();

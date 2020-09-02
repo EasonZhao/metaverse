@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -50,6 +50,12 @@ public:
 
     /// A transaction hash where index < transaction_count.
     hash_digest transaction_hash(size_t index) const;
+
+    // the signature for pos/dpos block
+    ec_signature blocksig() const;
+
+    // the public key for dpos block
+    ec_compressed public_key() const;
 
 private:
     const memory_ptr slab_;

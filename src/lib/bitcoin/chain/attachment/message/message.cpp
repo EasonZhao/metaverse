@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -32,106 +32,59 @@ blockchain_message::blockchain_message(): content_("")
 {
 }
 blockchain_message::blockchain_message(std::string content):
-	content_(content)
+    content_(content)
 {
 
 }
 
-blockchain_message blockchain_message::factory_from_data(const data_chunk& data)
-{
-    blockchain_message instance;
-    instance.from_data(data);
-    return instance;
-}
-
-blockchain_message blockchain_message::factory_from_data(std::istream& stream)
-{
-    blockchain_message instance;
-    instance.from_data(stream);
-    return instance;
-}
-
-blockchain_message blockchain_message::factory_from_data(reader& source)
-{
-    blockchain_message instance;
-    instance.from_data(source);
-    return instance;
-}
 
 void blockchain_message::reset()
 {
-	content_ = "";
+    content_ = "";
 }
+
 bool blockchain_message::is_valid() const
 {
-    return !(content_.empty() 
-			|| content_.size()+1>BLOCKCHAIN_MESSAGE_FIX_SIZE);
+    return !(content_.empty()
+            // add 1 here to prevent content_'s size == 253
+            || variable_string_size(content_) + 1 > BLOCKCHAIN_MESSAGE_FIX_SIZE);
 }
 
-bool blockchain_message::from_data(const data_chunk& data)
-{
-    data_source istream(data);
-    return from_data(istream);
-}
-
-bool blockchain_message::from_data(std::istream& stream)
-{
-    istream_reader source(stream);
-    return from_data(source);
-}
-
-bool blockchain_message::from_data(reader& source)
+bool blockchain_message::from_data_t(reader& source)
 {
     reset();
     content_ = source.read_string();
     auto result = static_cast<bool>(source);
-	
+
     return result;
 }
 
-data_chunk blockchain_message::to_data() const
+void blockchain_message::to_data_t(writer& sink) const
 {
-    data_chunk data;
-    data_sink ostream(data);
-    to_data(ostream);
-    ostream.flush();
-    //BITCOIN_ASSERT(data.size() == serialized_size());
-    return data;
-}
-
-void blockchain_message::to_data(std::ostream& stream) const
-{
-    ostream_writer sink(stream);
-    to_data(sink);
-}
-
-void blockchain_message::to_data(writer& sink) const
-{
-	sink.write_string(content_);
+    sink.write_string(content_);
 }
 
 uint64_t blockchain_message::serialized_size() const
 {
-	size_t len = content_.size() + 1;
-	return std::min(len, BLOCKCHAIN_MESSAGE_FIX_SIZE);
+    size_t len = variable_string_size(content_);
+    return std::min(len, BLOCKCHAIN_MESSAGE_FIX_SIZE);
 }
 
 std::string blockchain_message::to_string() const
 {
     std::ostringstream ss;
-	ss << "\t content = " << content_ << "\n";
+    ss << "\t content = " << content_ << "\n";
 
     return ss.str();
 }
 const std::string& blockchain_message::get_content() const
 {
-	return content_;
+    return content_;
 }
 
 void blockchain_message::set_content(const std::string& content)
 {
-	size_t len = content.size()+1 < (BLOCKCHAIN_MESSAGE_FIX_SIZE) ?content.size()+1:BLOCKCHAIN_MESSAGE_FIX_SIZE;
-	this->content_ = content.substr(0, len);
+    content_ = limit_size_string(content, BLOCKCHAIN_MESSAGE_FIX_SIZE);
 }
 
 } // namspace chain

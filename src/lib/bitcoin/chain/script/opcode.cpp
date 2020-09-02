@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -19,9 +19,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <metaverse/bitcoin/chain/script/opcode.hpp>
-
-#include <sstream>
+#include <metaverse/bitcoin/chain/script/script.hpp>
+#include <metaverse/macros_define.hpp>
 #include <metaverse/bitcoin/constants.hpp>
+#include <sstream>
 
 namespace libbitcoin {
 namespace chain {
@@ -236,12 +237,13 @@ std::string opcode_to_string(opcode value, uint32_t flags)
             return "checkmultisigverify";
         case opcode::op_nop1:
             return "nop1";
-        case opcode::op_nop2:
-            return "nop2";
-        case opcode::op_nop3:
-            return "nop3";
-        case opcode::op_nop4:
-            return "nop4";
+        case opcode::checklocktimeverify:
+            return "checklocktimeverify";
+        case opcode::checkattenuationverify:
+            return "checkattenuationverify";
+        case opcode::checksequenceverify:
+            return script::is_active(flags, script_context::bip112_enabled) ?
+                "checksequenceverify" : "nop4";
         case opcode::op_nop5:
             return "nop5";
         case opcode::op_nop6:
@@ -471,17 +473,16 @@ opcode string_to_opcode(const std::string& value)
         return opcode::checkmultisig;
     else if (value == "checkmultisigverify")
         return opcode::checkmultisigverify;
-    // Replaces nop2 with BIP65 activation.
-    else if (value == "checklocktimeverify")
-        return opcode::checklocktimeverify;
     else if (value == "nop1")
         return opcode::op_nop1;
-    else if (value == "nop2")
-        return opcode::op_nop2;
-    else if (value == "nop3")
-        return opcode::op_nop3;
-    else if (value == "nop4")
-        return opcode::op_nop4;
+    // Replaces nop2 with BIP65 activation.
+    else if (value == "nop2" || value == "checklocktimeverify")
+        return opcode::checklocktimeverify;
+    // Replaces nop3 with attenuation, see MIP7 and MIP8.
+    else if (value == "nop3" || value == "checkattenuationverify")
+        return opcode::checkattenuationverify;
+    else if (value == "nop4" || value == "checksequenceverify")
+        return opcode::checksequenceverify;
     else if (value == "nop5")
         return opcode::op_nop5;
     else if (value == "nop6")
@@ -515,6 +516,36 @@ opcode data_to_opcode(const data_chunk& value)
     else
         code = opcode::bad_operation;
     return code;
+}
+
+// Determine if code is in the op_n range.
+bool within_op_n(opcode code)
+{
+    const auto value = static_cast<uint8_t>(code);
+    constexpr auto op_1 = static_cast<uint8_t>(opcode::op_1);
+    constexpr auto op_16 = static_cast<uint8_t>(opcode::op_16);
+    return op_1 <= value && value <= op_16;
+}
+
+// Return the op_n index (i.e. value of n).
+uint8_t decode_op_n(opcode code)
+{
+    BITCOIN_ASSERT(within_op_n(code));
+    const auto value = static_cast<uint8_t>(code);
+    constexpr auto op_0 = static_cast<uint8_t>(opcode::op_1) - 1;
+    return value - op_0;
+}
+
+script_context get_script_context()
+{
+#ifdef ENABLE_LOCKTIME
+    return script_context::all_enabled;
+#else
+    uint32_t context = script_context::all_enabled;
+    context &= ~bip65_enabled;  // disable nLocktime
+    context &= ~bip112_enabled; // disable nSequence
+    return static_cast<script_context>(context);
+#endif
 }
 
 } // namspace chain

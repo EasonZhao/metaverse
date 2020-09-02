@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -37,7 +37,7 @@ class BC_API hash256
 public:
     /**
      * A list of bitcoin 256 bit hashes.
-     * This must provide operator<< for ostream in order to be used as a 
+     * This must provide operator<< for ostream in order to be used as a
      * boost::program_options default_value.
      */
     typedef std::vector<hash256> list;
@@ -52,6 +52,7 @@ public:
      * @param[in]  other  The object to copy into self on construct.
      */
     hash256(const hash256& other);
+    hash256& operator=(const hash256& other) = default;
 
     /**
      * Initialization constructor.
@@ -64,7 +65,7 @@ public:
      * @param[in]  value  The hash value to initialize with.
      */
     hash256(const hash_digest& value);
-    
+
     /**
      * Get the hash as a string.
      * @return The hash in the string hexidecimal form.

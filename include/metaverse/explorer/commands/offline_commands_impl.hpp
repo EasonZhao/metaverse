@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-explorer.
  *
@@ -22,7 +22,7 @@
 #pragma once
 
 #include <metaverse/bitcoin.hpp>
-#include <metaverse/explorer/define.hpp> 
+#include <metaverse/explorer/define.hpp>
 #include <metaverse/explorer/utility.hpp>
 
 namespace libbitcoin {
@@ -51,6 +51,10 @@ const uint32_t hd_default_public_version = 76067358;
         "The specified words are not a valid mnemonic in the specified dictionary."
 #define MVSCLI_EC_MNEMONIC_TO_SEED_INVALID_IN_LANGUAGES \
         "WARNING: The specified words are not a valid mnemonic in any supported dictionary."
+#define MVSCLI_EC_MNEMONIC_TO_SEED_EMPTY_WORDS \
+        "The specified words are empty."
+#define MVSCLI_EC_MNEMONIC_TO_SEED_WORD_NOT_IN_DICTIONARY \
+        "The specified words contain illegal word that is not included in the dictionary."
 #define MVSCLI_HD_NEW_SHORT_SEED \
         "The seed is less than 128 bits long."
 #define MVSCLI_HD_NEW_INVALID_KEY \
@@ -61,15 +65,15 @@ const uint32_t hd_default_public_version = 76067358;
 // -------------------------------------------------------------------
 // decalration for functions
 
-data_chunk get_seed(uint16_t bit_length);
+data_chunk get_seed(uint16_t bit_length = 256u);
 
 bw::word_list get_mnemonic_new(const bw::dictionary_list& language, const data_chunk& entropy);
 
-data_chunk get_mnemonic_to_seed(const bw::dictionary_list& language,            
-            const std::string& passphrase,                                              
-            const bw::word_list& words);
+data_chunk get_mnemonic_to_seed(const bw::dictionary_list& language,
+            const bw::word_list& words,
+            std::string passphrase = "");
 
-bw::hd_private get_hd_new(const data_chunk& seed, uint32_t version);
+bw::hd_private get_hd_new(const data_chunk& seed, uint32_t version = hd_default_secret_version);
 
 
 

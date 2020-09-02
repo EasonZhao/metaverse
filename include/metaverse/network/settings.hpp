@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -53,6 +53,10 @@ public:
     uint32_t channel_germination_seconds;
     uint32_t host_pool_capacity;
     bool relay_transactions;
+    bool enable_re_seeding;
+    bool upnp_map_port;
+    bool be_found;
+    bool use_ipv6;
     boost::filesystem::path hosts_file;
     boost::filesystem::path debug_file;
     boost::filesystem::path error_file;

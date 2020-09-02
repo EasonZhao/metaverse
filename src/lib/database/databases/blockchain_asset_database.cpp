@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -32,13 +32,14 @@ namespace database {
 
 using namespace boost::filesystem;
 
-BC_CONSTEXPR size_t number_buckets = 999997;
+//BC_CONSTEXPR size_t number_buckets = 999997;
+BC_CONSTEXPR size_t number_buckets = 9997;
 BC_CONSTEXPR size_t header_size = slab_hash_table_header_size(number_buckets);
 BC_CONSTEXPR size_t initial_map_file_size = header_size + minimum_slabs_size;
 
 blockchain_asset_database::blockchain_asset_database(const path& map_filename,
     std::shared_ptr<shared_mutex> mutex)
-  : lookup_file_(map_filename, mutex), 
+  : lookup_file_(map_filename, mutex),
     lookup_header_(lookup_file_, number_buckets),
     lookup_manager_(lookup_file_, header_size),
     lookup_map_(lookup_header_, lookup_manager_)
@@ -111,49 +112,118 @@ void blockchain_asset_database::sync()
     lookup_manager_.sync();
 }
 
-std::shared_ptr<blockchain_asset> blockchain_asset_database::get(const hash_digest& hash) const
+std::shared_ptr<chain::blockchain_asset> blockchain_asset_database::get(const hash_digest& hash) const
 {
-	std::shared_ptr<blockchain_asset> detail(nullptr);
-	
-    const auto raw_memory = lookup_map_.find(hash);
-	if(raw_memory) {
-	    const auto memory = REMAP_ADDRESS(raw_memory);
-		detail = std::make_shared<blockchain_asset>();
-		auto deserial = make_deserializer_unsafe(memory);
-		detail->from_data(deserial);
-	}
-	
-	return detail;
-}
-/// 
-std::shared_ptr<std::vector<blockchain_asset>> blockchain_asset_database::get_blockchain_assets() const
-{
-	auto vec_acc = std::make_shared<std::vector<blockchain_asset>>();
-	uint64_t i = 0;
-	for( i = 0; i < number_buckets; i++ ) {
-	    auto memo = lookup_map_.find(i);
-		//log::debug("get_accounts size=")<<memo->size();
-		if(memo->size()) 
-		{			
-			const auto action = [&](memory_ptr elem)
-			{
-				const auto memory = REMAP_ADDRESS(elem);
-				auto deserial = make_deserializer_unsafe(memory);
-				vec_acc->push_back(blockchain_asset::factory_from_data(deserial));				
-			};
-			std::for_each(memo->begin(), memo->end(), action);
-		}
-	}
-	return vec_acc;
+    std::shared_ptr<chain::blockchain_asset> detail(nullptr);
+
+    const auto raw_memory = lookup_map_.rfind(hash);
+    if(raw_memory) {
+        const auto memory = REMAP_ADDRESS(raw_memory);
+        detail = std::make_shared<chain::blockchain_asset>();
+        auto deserial = make_deserializer_unsafe(memory);
+        detail->from_data(deserial);
+    }
+
+    return detail;
 }
 
-void blockchain_asset_database::store(const hash_digest& hash, const blockchain_asset& sp_detail)
+uint64_t blockchain_asset_database::get_asset_volume(const std::string& name) const
+{
+    uint64_t volume = 0;
+    const auto hash = sha256_hash(data_chunk(name.begin(), name.end()));
+    auto memo = lookup_map_.finds(hash);
+    const auto action = [&](memory_ptr elem)
+    {
+        const auto memory = REMAP_ADDRESS(elem);
+        auto deserial = make_deserializer_unsafe(memory);
+        auto& asset = chain::blockchain_asset::factory_from_data(deserial).get_asset();
+        volume += asset.get_maximum_supply();
+    };
+    std::for_each(memo.begin(), memo.end(), action);
+
+    return volume;
+}
+
+///
+std::shared_ptr<std::vector<chain::blockchain_asset>> blockchain_asset_database::get_blockchain_assets(const std::string& asset_symbol) const
+{
+    if (!asset_symbol.empty()) {
+        return get_asset_history(asset_symbol);
+    }
+
+    auto vec_acc = std::make_shared<std::vector<chain::blockchain_asset>>();
+    uint64_t i = 0;
+    for( i = 0; i < number_buckets; i++ ) {
+        auto memo = lookup_map_.find(i);
+        //log::debug("get_accounts size=")<<memo->size();
+        if (memo->size()) {
+            const auto action = [&](memory_ptr elem)
+            {
+                const auto memory = REMAP_ADDRESS(elem);
+                auto deserial = make_deserializer_unsafe(memory);
+                vec_acc->push_back(chain::blockchain_asset::factory_from_data(deserial));
+            };
+            std::for_each(memo->begin(), memo->end(), action);
+        }
+    }
+    return vec_acc;
+}
+
+///
+std::shared_ptr<chain::blockchain_asset::list> blockchain_asset_database::get_asset_history(const std::string & asset_symbol) const
+{
+    std::shared_ptr<chain::blockchain_asset::list> blockchain_asset_ = std::make_shared<chain::blockchain_asset::list>();
+    data_chunk data(asset_symbol.begin(), asset_symbol.end());
+    auto key = sha256_hash(data);
+
+    auto asset_vec = lookup_map_.finds(key);
+    for(auto memo : asset_vec){
+        if(memo)
+        {
+            const auto memory = REMAP_ADDRESS(memo);
+            auto deserial = make_deserializer_unsafe(memory);
+            blockchain_asset_->emplace_back(chain::blockchain_asset::factory_from_data(deserial));
+        }
+    }
+
+    return blockchain_asset_;
+}
+
+///
+std::shared_ptr<chain::blockchain_asset> blockchain_asset_database::get_register_history(const std::string & asset_symbol) const
+{
+    std::shared_ptr<chain::blockchain_asset> blockchain_asset_ = nullptr;
+    data_chunk data(asset_symbol.begin(), asset_symbol.end());
+    auto key = sha256_hash(data);
+
+    auto memo = lookup_map_.rfind(key);
+    if(memo)
+    {
+        blockchain_asset_ = std::make_shared<chain::blockchain_asset>();
+        const auto memory = REMAP_ADDRESS(memo);
+        auto deserial = make_deserializer_unsafe(memory);
+        blockchain_asset_->from_data(deserial);
+    }
+
+    return blockchain_asset_;
+}
+
+///
+uint64_t blockchain_asset_database::get_register_height(const std::string & asset_symbol) const
+{
+    std::shared_ptr<chain::blockchain_asset> blockchain_asset_ = get_register_history(asset_symbol);
+    if(blockchain_asset_)
+        return blockchain_asset_->get_height();
+    return max_uint64;
+}
+
+void blockchain_asset_database::store(const hash_digest& hash, const chain::blockchain_asset& sp_detail)
 {
     // Write block data.
     const auto key = hash;
     const auto sp_size = sp_detail.serialized_size();
 #ifdef MVS_DEBUG
-	log::debug("asset_database::store") << sp_detail.to_string();
+    log::debug("asset_database::store") << sp_detail.to_string();
 #endif
     BITCOIN_ASSERT(sp_size <= max_size_t);
     const auto value_size = static_cast<size_t>(sp_size);
@@ -163,7 +233,7 @@ void blockchain_asset_database::store(const hash_digest& hash, const blockchain_
         auto serial = make_serializer(REMAP_ADDRESS(data));
         serial.write_data(sp_detail.to_data());
     };
-	lookup_map_.store(key, write, value_size);
+    lookup_map_.store(key, write, value_size);
 }
 
 

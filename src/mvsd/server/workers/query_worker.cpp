@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse-server.
  *
@@ -127,7 +127,7 @@ void query_worker::query(zmq::socket& router)
     {
         const auto ec = response.send(router);
 
-        if (ec && ec != (code)error::service_stopped)
+        if (ec && ec.value() != error::service_stopped)
             log::warning(LOG_SERVER)
                 << "Failed to send query response to "
                 << response.route().display() << " " << ec.message();
@@ -136,7 +136,7 @@ void query_worker::query(zmq::socket& router)
     message request(secure_);
     const auto ec = request.receive(router);
 
-    if (ec == (code)error::service_stopped)
+    if (ec.value() == error::service_stopped)
         return;
 
     if (ec)
@@ -162,10 +162,9 @@ void query_worker::query(zmq::socket& router)
         return;
     }
 
-    if (settings_.log_requests)
-        log::info(LOG_SERVER)
-            << "Query " << request.command() << " from "
-            << request.route().display();
+    log::debug(LOG_SERVER)
+        << "Query " << request.command() << " from "
+        << request.route().display();
 
     // The query executor is the delegate bound by the attach method.
     const auto& query_execute = handler->second;

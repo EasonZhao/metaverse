@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -26,11 +26,11 @@
 #include <metaverse/bitcoin/math/hash.hpp>
 #include <metaverse/bitcoin/utility/assert.hpp>
 #include <metaverse/bitcoin/utility/data.hpp>
-#include "../math/external/lax_der_parsing.h"
+#include "external/lax_der_parsing.h"
 #include "secp256k1_initializer.hpp"
 
 namespace libbitcoin {
-    
+
 static constexpr uint8_t compressed_even = 0x02;
 static constexpr uint8_t compressed_odd = 0x03;
 static constexpr uint8_t uncompressed = 0x04;

@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -160,7 +160,7 @@ void version::to_data(uint32_t version, writer& sink) const
 
 uint64_t version::serialized_size(uint32_t version) const
 {
-    auto size = 
+    auto size =
         sizeof(value) +
         sizeof(services) +
         sizeof(timestamp) +

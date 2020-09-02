@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 metaverse developers (see AUTHORS)
+ * Copyright (c) 2011-2020 metaverse developers (see AUTHORS)
  *
  * This file is part of mvs-node.
  *
@@ -28,11 +28,9 @@
 #include <metaverse/database/result/base_result.hpp>
 #include <metaverse/bitcoin/chain/attachment/asset/asset_transfer.hpp>
 
-using namespace libbitcoin::chain;
-
 namespace libbitcoin {
 namespace database {
-    
+
 /// read asset detail information from asset database.
 class BCD_API account_asset_result : public base_result
 {
@@ -40,7 +38,7 @@ public:
     account_asset_result(const memory_ptr slab);
 
     /// The asset account relationship.
-	asset_transfer get_account_asset_transfer() const;
+    chain::asset_transfer get_account_asset_transfer() const;
 };
 
 } // namespace database

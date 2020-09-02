@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
- * Copyright (c) 2016-2017 metaverse core developers (see MVS-AUTHORS)
+ * Copyright (c) 2011-2020 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2016-2020 metaverse core developers (see MVS-AUTHORS)
  *
  * This file is part of metaverse.
  *
@@ -150,8 +150,6 @@ message_type heading::type() const
     // TODO: convert to static map.
     if (command == address::command)
         return message_type::address;
-    if (command == alert::command)
-        return message_type::alert;
     if (command == block_transactions::command)
         return message_type::block_transactions;
     if (command == block_message::command)
